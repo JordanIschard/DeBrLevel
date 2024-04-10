@@ -2,11 +2,7 @@
 
 ## Task List
 
-- [ ] https://github.com/JordanIschard/DeBrLevel/issues/1
-- [ ] Update the doc
-- [x] ~~Modify Map in order to work with `DecidableType` data.~~
-- [x] Modify Map in order to work with `EqualityType` data.
-- [x] ~~Update [MapOTLevel](theories/Implementation/MapOTLevel.v) by adding make modules~~
+- [ ] Add feature asked in [](https://github.com/JordanIschard/DeBrLevel/issues/1)
 
 ## Introduction
 
