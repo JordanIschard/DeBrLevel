@@ -2,7 +2,7 @@
 
 ## Task List
 
-- [ ] Add feature asked in https://github.com/JordanIschard/DeBrLevel/issues/1
+- [x] Add feature asked in https://github.com/JordanIschard/DeBrLevel/issues/1
 - [ ] Create documentation asked in https://github.com/JordanIschard/DeBrLevel/issues/2
 
 ## Introduction
@@ -118,6 +118,14 @@ Here are the details:
     - [Mapkit/](theories/Map/Mapkit)
       - [MapExt.v](theories/Map/Mapkit/MapExt.v)
       - [MapExtInterface.v](theories/Map/Mapkit/MapExtInterface.v)
+    - [Maps/](theories/Map/Maps)
+      - [MapD.v](theories/Map/Maps/MapD.v)
+      - [MapK.v](theories/Map/Maps/MapK.v)
+      - [MapKD.v](theories/Map/Maps/MapKD.v)
+      - [MapLvl.v](theories/Map/Maps/MapLvl.v)
+      - [MapLvlD.v](theories/Map/Maps/MapLvlD.v)
+    - [MapLevel.v](theories/Map/MapLevel.v)
+    - [MapLevelInterface.v](theories/Map/MapLevelInterface.v)
     - [dune](theories/Map/dune)
   - [Set/](theories/Set)
     - [Setkit/](theories/Set/Setkit)
