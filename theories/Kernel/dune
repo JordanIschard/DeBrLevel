@@ -1,0 +1,4 @@
+(coq.theory 
+ (name Kernel)
+ (package Level-DeBr)
+ (synopsis "Heart of the library, it contains module types that defined Level and modules."))
