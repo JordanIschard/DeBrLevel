@@ -2,7 +2,7 @@
 
 ## Task List
 
-- [ ] Add feature asked in [](https://github.com/JordanIschard/DeBrLevel/issues/1)
+- [ ] Add feature asked in https://github.com/JordanIschard/DeBrLevel/issues/1
 
 ## Introduction
 
