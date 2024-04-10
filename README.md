@@ -4,6 +4,7 @@
 
 - [x] Add feature asked in https://github.com/JordanIschard/DeBrLevel/issues/1
 - [ ] Create documentation asked in https://github.com/JordanIschard/DeBrLevel/issues/2
+- [ ] Add examples https://github.com/JordanIschard/DeBrLevel/issues/4
 
 ## Introduction
 
