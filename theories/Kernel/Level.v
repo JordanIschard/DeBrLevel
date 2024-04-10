@@ -1,5 +1,5 @@
 From Coq Require Import Structures.OrdersEx Classes.Morphisms Arith.PeanoNat Lia.
-Require Import LevelInterface.
+Require Import Kernel.LevelInterface.
 
 
 (** * Implementation -- Level 

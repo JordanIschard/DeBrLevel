@@ -1,6 +1,6 @@
 (coq.theory 
  (name MapExt)
- (package Level-DeBr)
+ (package coq-debr-lvl)
  (synopsis "Extension of the kernel with maps.")
  (theories Kernel MMaps)
 )
