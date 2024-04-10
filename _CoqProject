@@ -16,6 +16,11 @@ theories/Map/Mapkit/MapExtInterface.v
 theories/Map/Mapkit/MapExt.v
 theories/Map/MapLevelInterface.v
 theories/Map/MapLevel.v
+theories/Map/Maps/MapD.v
+theories/Map/Maps/MapKD.v
+theories/Map/Maps/MapK.v
+theories/Map/Maps/MapLvlD.v
+theories/Map/Maps/MapLvl.v
 theories/Set/Levels.v
 theories/Set/Setkit/SetOTwLInterface.v
 theories/Set/Setkit/SetOTwL.v
