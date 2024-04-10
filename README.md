@@ -105,6 +105,20 @@ Here are the details:
 - In [MapOTLevel](theories/Implementation/MapOTLevel.v) and [MapLevelInterface](theories/Interface/MapLevelInterface.v), the extension name __`Data`__ is now contracted in __`D`__
 - Documentation is not updated for now
 -->
+## Installation instruction
+
+To Build and install manually, do:
+
+```bash
+git clone https://github.com/JordanIschard/DeBrLevel.git
+cd DeBrLevel
+make   # or make -j <number-of-cores-on-your-machine> 
+make install
+```
+
+> [!NOTE]
+> The package is not submitted yet, but we have great hope to create an opam package and add our project to the [coq community repository](https://github.com/coq-community).
+
 ## Structure of the library
 
 ### DeBrLevel
