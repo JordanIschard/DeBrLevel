@@ -105,7 +105,7 @@ Here are the details:
 - In [MapOTLevel](theories/Implementation/MapOTLevel.v) and [MapLevelInterface](theories/Interface/MapLevelInterface.v), the extension name __`Data`__ is now contracted in __`D`__
 - Documentation is not updated for now
 -->
-## Installation instruction
+## Installation instructions
 
 To Build and install manually, do:
 
