@@ -1,5 +1,5 @@
 From Coq Require Import Orders Lia RelationPairs Bool.Bool Structures.EqualitiesFacts.
-Require Import LevelInterface Level.
+From Kernel Require Import LevelInterface Level.
 
 Module ShiftValidPairET (O1 : ShiftValidET) 
                                    (O2 : ShiftValidET) <: ShiftValidET.

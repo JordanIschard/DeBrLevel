@@ -1,6 +1,6 @@
 (coq.theory 
  (name SetExt)
- (package Level-DeBr)
+ (package coq-debr-lvl)
  (synopsis "Extension of the kernel with sets.")
  (theories Kernel))
 

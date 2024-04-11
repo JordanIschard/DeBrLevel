@@ -6,7 +6,7 @@
   ./etc/generate_coqproject.sh
   (source_tree theories))
  (mode promote)
- (package Level-DeBr)
+ (package coq-debr-lvl)
  (action
   (setenv
    GENERATE_COQPROJECT_FOR_DUNE
