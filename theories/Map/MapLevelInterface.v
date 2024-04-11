@@ -1,6 +1,6 @@
 From Coq Require Import Structures.Equalities.
-From Kernel Require Import Level LevelInterface.
-From MapExt Require Import MapExtInterface. 
+Require Import Kernel.Level Kernel.LevelInterface.
+Require Import MapExtInterface. 
 
 (** * Interfaces -- Map Level with datas as equality types
 

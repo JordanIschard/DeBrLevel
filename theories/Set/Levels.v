@@ -1,6 +1,6 @@
 From Coq Require Import MSets Lia.
-From Kernel Require Import LevelInterface Level.
-From SetExt Require Import SetLevelInterface SetLevel.
+Require Import Kernel.LevelInterface Kernel.Level.
+Require Import SetLevelInterface SetLevel.
 
 (** * Implementation -- Level Set
 

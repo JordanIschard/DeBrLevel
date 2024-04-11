@@ -1,6 +1,6 @@
 From Coq Require Import MSets.
-From Kernel Require Import Level LevelInterface.
-From SetExt Require Import SetOTwLInterface SetOTwL.
+Require Import Kernel.Level Kernel.LevelInterface.
+Require Import SetOTwLInterface SetOTwL.
 
 (** * Interfaces -- Set Level
 

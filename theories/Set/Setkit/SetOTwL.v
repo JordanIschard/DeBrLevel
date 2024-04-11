@@ -1,5 +1,5 @@
 From Coq Require Import MSets Classical_Prop.
-From SetExt Require Import SetOTwLInterface.
+Require Import SetOTwLInterface.
 
 Module SetOTWithLeibniz (Elt : MSetList.OrderedTypeWithLeibniz) <: (SetOTWithLeibnizInterface Elt).
 

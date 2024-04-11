@@ -8,7 +8,7 @@
  (synopsis "Helper for using De Bruijn level representation.")
  (description "Representation of binders or arbitrary names can be annoying and use of representation is common. We develop a collection of modules and module types for simply defined Types or Sets that use De Bruijn levels as a representation.")
  (depends
-  (coq (= 8.18))
+  (coq (= 8.18.0))
   (coq-mmaps (>= 1.1))
  )
  (authors "Ischard Jordan")

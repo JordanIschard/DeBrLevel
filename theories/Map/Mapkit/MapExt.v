@@ -1,7 +1,7 @@
 From Coq Require Import MSets Lia Arith.PeanoNat Classical_Prop Classes.RelationClasses.
 From MMaps Require Import MMaps.
-From Kernel Require Import Level.
-From MapExt Require Import MapExtInterface.
+Require Import Kernel.Level.
+Require Import MapExtInterface.
 
 Module MapET (Key : OrderedTypeWithLeibniz) (Data : EqualityType) 
                                             (M : Interface.S Key) <:  MapInterface Key Data M.

@@ -10,7 +10,7 @@ homepage: "https://github.com/JordanIschard/DeBrLevel"
 bug-reports: "https://github.com/JordanIschard/DeBrLevel/issues"
 depends: [
   "dune" {>= "3.12"}
-  "coq" {= "8.18"}
+  "coq" {= "8.18.0"}
   "coq-mmaps" {>= "1.1"}
   "odoc" {with-doc}
 ]

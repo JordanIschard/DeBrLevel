@@ -1,7 +1,7 @@
 From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasses.
 From MMaps Require Import MMaps.
-From Kernel Require Import Level LevelInterface. 
-From MapExt Require Import MapExtInterface MapExt MapLevelInterface MapKD.
+Require Import Kernel.Level Kernel.LevelInterface. 
+Require Import MapExtInterface MapExt MapLevelInterface MapKD.
 
 (** * Implementation -- Map *)
 
