@@ -1,12 +1,12 @@
 From Coq Require Import Structures.OrdersEx Classes.Morphisms Arith.PeanoNat Lia.
-Require Import Kernel.LevelInterface.
+From DeBrLevel Require Import LevelInterface.
 
 
 (** * Implementation -- Level 
 
   A level in our library is a [nat]. it has to satisfied all constraints.
 *)
-Module Level <: StrongShiftValidFullOTWithLeibniz.
+Module Level <: IsBdlLvlFullOTWL.
 
   Include Lvl.
 

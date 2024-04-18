@@ -1,8 +1,0 @@
-(coq.theory 
- (name MapExt)
- (package coq-debr-lvl)
- (synopsis "Extension of the kernel with maps.")
- (theories Kernel MMaps)
-)
-
-(include_subdirs qualified)

@@ -1,6 +1,5 @@
 From Coq Require Import Structures.Equalities.
-Require Import Kernel.Level Kernel.LevelInterface.
-Require Import MapExtInterface. 
+From DeBrLevel Require Import Level LevelInterface MapExtInterface. 
 
 (** * Interfaces -- Map Level with datas as equality types
 
@@ -12,12 +11,12 @@ Require Import MapExtInterface.
 
 (** *** Map interface with minimal constraints *)
 
-Module Type ShiftValidMapDInterface  (Key : OrderedTypeWithLeibniz)
-                                    (Data : ShiftValidETWithLeibniz) 
+Module Type IsLvlMapDInterface  (Key : OrderedTypeWithLeibniz)
+                                    (Data : IsLvlETWL) 
                                     (M : Interface.S Key)
-                                    (MO : MapInterface Key Data M) <: ShiftValid MO.
+                                    (MO : MapInterface Key Data M) <: IsLvl MO.
 
-Include ShiftValid MO.
+Include IsLvl MO.
 Import MO OP.P.
 
 (** **** Valid *)
@@ -72,41 +71,41 @@ Parameter shift_find_spec :
 
 End shift.
 
-End ShiftValidMapDInterface.
+End IsLvlMapDInterface.
 
 
 (** *** Map interface fully constrained *)
-Module Type StrongShiftValidMapDInterface  (Key : OrderedTypeWithLeibniz)
-                                          (Data : StrongShiftValidETWithLeibniz) 
+Module Type IsBdlLvlMapDInterface  (Key : OrderedTypeWithLeibniz)
+                                          (Data : IsBdlLvlETWL) 
                                           (M : Interface.S Key) 
-                                          (MO : MapInterface Key Data M) <: StrongShiftValid MO
-:= ShiftValidMapDInterface Key Data M MO <+ StrongShiftValidEx MO.
+                                          (MO : MapInterface Key Data M) <: IsBdlLvl MO
+:= IsLvlMapDInterface Key Data M MO <+ IsBindlessLeveledEx MO.
 
 (** *** Map interface with minimal constraints with [validb] *)
-Module Type ShiftValidFullMapDInterface  (Key : OrderedTypeWithLeibniz)
-                                        (Data : ShiftValidFullETWithLeibniz) 
+Module Type IsLvlFullMapDInterface  (Key : OrderedTypeWithLeibniz)
+                                        (Data : IsLvlFullETWL) 
                                         (M : Interface.S Key) 
                                         (MO : MapInterface Key Data M)
-:= (ShiftValidMapDInterface Key Data M MO) <+ HasValidFull MO.
+:= (IsLvlMapDInterface Key Data M MO) <+ HasValidFull MO.
 
 (** *** Map interface fully constrained with [validb] *)
-Module Type StrongShiftValidFullMapDInterface  (Key : OrderedTypeWithLeibniz)
-                                              (Data : StrongShiftValidFullETWithLeibniz) 
+Module Type IsBdlLvlFullMapDInterface  (Key : OrderedTypeWithLeibniz)
+                                              (Data : IsBdlLvlFullETWL) 
                                               (M : Interface.S Key) 
                                               (MO : MapInterface Key Data M) 
-:=  (StrongShiftValidMapDInterface Key Data M MO) <+ HasValidFull MO.
+:=  (IsBdlLvlMapDInterface Key Data M MO) <+ HasValidFull MO.
 
 
 (** ** Map interface with basic datas and leveled keys *)
 
 (** *** Map interface with minimal constraints *)
 
-Module Type ShiftValidMapInterface  (Key : ShiftValidOTWithLeibniz)
+Module Type IsLvlMapInterface  (Key : IsLvlOTWL)
                                     (Data : EqualityType) 
                                     (M : Interface.S Key)
-                                    (MO : MapInterface Key Data M) <: ShiftValid MO.
+                                    (MO : MapInterface Key Data M) <: IsLvl MO.
 
-Include ShiftValid MO.
+Include IsLvl MO.
 Import MO OP.P.
 
 (** **** Valid *)
@@ -160,29 +159,29 @@ Parameter shift_find_spec :
 
 End shift.
 
-End ShiftValidMapInterface.
+End IsLvlMapInterface.
 
 
 (** *** Map interface fully constrained *)
-Module Type StrongShiftValidMapInterface  (Key : StrongShiftValidOTWithLeibniz)
+Module Type IsBdlLvlMapInterface  (Key : IsBdlLvlOTWL)
                                           (Data : EqualityType) 
                                           (M : Interface.S Key) 
-                                          (MO : MapInterface Key Data M) <: StrongShiftValid MO
-:= ShiftValidMapInterface Key Data M MO <+ StrongShiftValidEx MO.
+                                          (MO : MapInterface Key Data M) <: IsBdlLvl MO
+:= IsLvlMapInterface Key Data M MO <+ IsBindlessLeveledEx MO.
 
 (** *** Map interface with minimal constraints with [validb] *)
-Module Type ShiftValidFullMapInterface  (Key : ShiftValidFullOTWithLeibniz)
+Module Type IsLvlFullMapInterface  (Key : IsLvlFullOTWL)
                                         (Data : EqualityType) 
                                         (M : Interface.S Key) 
                                         (MO : MapInterface Key Data M)
-:= (ShiftValidMapInterface Key Data M MO) <+ HasValidFull MO.
+:= (IsLvlMapInterface Key Data M MO) <+ HasValidFull MO.
 
 (** *** Map interface fully constrained with [validb] *)
-Module Type StrongShiftValidFullMapInterface  (Key : StrongShiftValidFullOTWithLeibniz)
+Module Type IsBdlLvlFullMapInterface  (Key : IsBdlLvlFullOTWL)
                                               (Data : EqualityType) 
                                               (M : Interface.S Key) 
                                               (MO : MapInterface Key Data M) 
-:=  (StrongShiftValidMapInterface Key Data M MO) <+ HasValidFull MO.
+:=  (IsBdlLvlMapInterface Key Data M MO) <+ HasValidFull MO.
 
 
 
@@ -196,12 +195,12 @@ Module Type StrongShiftValidFullMapInterface  (Key : StrongShiftValidFullOTWithL
 (** ** Map interface with leveled keys and datas *)
 
 (** *** Map interface with minimal constraints *)
-Module Type ShiftValidMapWLInterface  (Key : ShiftValidOTWithLeibniz)
-                                        (Data : ShiftValidETWithLeibniz) 
+Module Type IsLvlMapWLInterface  (Key : IsLvlOTWL)
+                                        (Data : IsLvlETWL) 
                                         (M : Interface.S Key)
-                                        (MO : MapInterface Key Data M) <: ShiftValid MO.
+                                        (MO : MapInterface Key Data M) <: IsLvl MO.
 
-Include ShiftValid MO.
+Include IsLvl MO.
 Import MO OP.P.
 
 (** **** Valid *)
@@ -260,30 +259,30 @@ Parameter shift_find_e_spec :
 
 End shift.
 
-End ShiftValidMapWLInterface.
+End IsLvlMapWLInterface.
 
 (** *** Map interface fully constrained *)
-Module Type StrongShiftValidMapWLInterface (Key : StrongShiftValidOTWithLeibniz)
-                                             (Data : StrongShiftValidETWithLeibniz) 
+Module Type IsBdlLvlMapWLInterface (Key : IsBdlLvlOTWL)
+                                             (Data : IsBdlLvlETWL) 
                                              (M : Interface.S Key) 
                                              (MO : MapInterface Key Data M) 
-                                               <: StrongShiftValid MO
-:= ShiftValidMapWLInterface Key Data M MO <+ StrongShiftValidEx MO.
+                                               <: IsBdlLvl MO
+:= IsLvlMapWLInterface Key Data M MO <+ IsBindlessLeveledEx MO.
 
 
 (** *** Map interface with minimal constraints with [validb] *)
-Module Type ShiftValidFullMapWLInterface  (Key : StrongShiftValidFullOTWithLeibniz)
-                                            (Data : ShiftValidFullETWithLeibniz) 
+Module Type IsLvlFullMapWLInterface  (Key : IsBdlLvlFullOTWL)
+                                            (Data : IsLvlFullETWL) 
                                             (M : Interface.S Key) 
                                             (MO : MapInterface Key Data M)
-:= (ShiftValidMapWLInterface Key Data M MO) <+ HasValidFull MO.
+:= (IsLvlMapWLInterface Key Data M MO) <+ HasValidFull MO.
 
 (** *** Map interface fully constrained with [validb] *)
-Module Type StrongShiftValidFullMapWLInterface  (Key : StrongShiftValidFullOTWithLeibniz)
-                                                  (Data : StrongShiftValidFullETWithLeibniz) 
+Module Type IsBdlLvlFullMapWLInterface  (Key : IsBdlLvlFullOTWL)
+                                                  (Data : IsBdlLvlFullETWL) 
                                                   (M : Interface.S Key) 
                                                   (MO : MapInterface Key Data M) 
-:=  (StrongShiftValidMapWLInterface Key Data M MO) <+ HasValidFull MO.
+:=  (IsBdlLvlMapWLInterface Key Data M MO) <+ HasValidFull MO.
 
 
 
@@ -294,11 +293,11 @@ Module Type StrongShiftValidFullMapWLInterface  (Key : StrongShiftValidFullOTWit
 (** ** Map interface with levels as keys and basic datas *)
 
 (** *** Map interface with minimal constraints *)
-Module Type ShiftValidMapLVLInterface  (Data : EqualityType) 
+Module Type IsLvlMapLVLInterface  (Data : EqualityType) 
                                            (M : Interface.S Level)
-                                           (MO : MapLVLInterface Data M) <: ShiftValid MO.
+                                           (MO : MapLVLInterface Data M) <: IsLvl MO.
 
-Include ShiftValidMapInterface Level Data M MO.
+Include IsLvlMapInterface Level Data M MO.
 Import MO OP.P.
 
 (** **** Shift *)
@@ -313,37 +312,37 @@ Section shift.
 
 End shift.
 
-End ShiftValidMapLVLInterface.
+End IsLvlMapLVLInterface.
 
 (** *** Map interface fully constrained *)
-Module Type StrongShiftValidMapLVLInterface  (Data : EqualityType) 
+Module Type IsBdlLvlMapLVLInterface  (Data : EqualityType) 
                                                  (M : Interface.S Level) 
                                                  (MO : MapLVLInterface Data M) 
-                                                 <: StrongShiftValid MO
-:= ShiftValidMapLVLInterface Data M MO <+ StrongShiftValidEx MO.
+                                                 <: IsBdlLvl MO
+:= IsLvlMapLVLInterface Data M MO <+ IsBindlessLeveledEx MO.
 
 (** *** Map interface with minimal constraints with [validb] *)
-Module Type ShiftValidFullMapLVLInterface  (Data : EqualityType) 
+Module Type IsLvlFullMapLVLInterface  (Data : EqualityType) 
                                                (M : Interface.S Level) 
                                                (MO : MapLVLInterface Data M)
-:= (ShiftValidMapLVLInterface Data M MO) <+ HasValidFull MO.
+:= (IsLvlMapLVLInterface Data M MO) <+ HasValidFull MO.
 
 (** *** Map interface fully constrained with [validb] *)
-Module Type StrongShiftValidFullMapLVLInterface  (Data : EqualityType) 
+Module Type IsBdlLvlFullMapLVLInterface  (Data : EqualityType) 
                                                 (M : Interface.S Level) 
                                                 (MO : MapLVLInterface Data M) 
-:=  (StrongShiftValidMapLVLInterface Data M MO) <+ HasValidFull MO.
+:=  (IsBdlLvlMapLVLInterface Data M MO) <+ HasValidFull MO.
 
 
 (** ** Map interface with leveled datas and levels as keys *)
 
 (** *** Map interface with minimal constraints *)
-Module Type ShiftValidMapWLLVLInterface  (Data : ShiftValidETWithLeibniz) 
+Module Type IsLvlMapWLLVLInterface  (Data : IsLvlETWL) 
                                                (M : Interface.S Level)
                                                (MO : MapLVLInterface Data M)
-                                                <: ShiftValid MO.
+                                                <: IsLvl MO.
 
-Include ShiftValid MO.
+Include IsLvl MO.
 Import MO OP.P.
 
 (** **** Valid *)
@@ -408,25 +407,25 @@ Parameter shift_max_spec : lb >= (new_key m) -> max_key (shift lb k m) = max_key
 
 End shift.
 
-End ShiftValidMapWLLVLInterface.
+End IsLvlMapWLLVLInterface.
 
 (** *** Map interface fully constrained *)
-Module Type StrongShiftValidMapWLLVLInterface  
-                                            (Data : StrongShiftValidETWithLeibniz) 
+Module Type IsBdlLvlMapWLLVLInterface  
+                                            (Data : IsBdlLvlETWL) 
                                             (M : Interface.S Level) 
                                             (MO : MapLVLInterface Data M) 
-                                            <: StrongShiftValid MO 
-:= ShiftValidMapWLLVLInterface Data M MO <+ StrongShiftValidEx MO.
+                                            <: IsBdlLvl MO 
+:= IsLvlMapWLLVLInterface Data M MO <+ IsBindlessLeveledEx MO.
 
 (** *** Map interface with minimal constraints with [validb] *)
-Module Type ShiftValidFullMapWLLVLInterface  (Data : ShiftValidFullETWithLeibniz) 
+Module Type IsLvlFullMapWLLVLInterface  (Data : IsLvlFullETWL) 
                                                    (M : Interface.S Level) 
                                                    (MO : MapLVLInterface Data M)
-:= (ShiftValidMapWLLVLInterface Data M MO) <+ HasValidFull MO.
+:= (IsLvlMapWLLVLInterface Data M MO) <+ HasValidFull MO.
 
 (** *** Map interface fully constrained with [validb] *)
-Module Type StrongShiftValidFullMapWLLVLInterface  
-                                                    (Data : StrongShiftValidFullETWithLeibniz) 
+Module Type IsBdlLvlFullMapWLLVLInterface  
+                                                    (Data : IsBdlLvlFullETWL) 
                                                     (M : Interface.S Level) 
                                                     (MO : MapLVLInterface Data M) 
-:=  (StrongShiftValidMapWLLVLInterface Data M MO) <+ HasValidFull MO.
+:=  (IsBdlLvlMapWLLVLInterface Data M MO) <+ HasValidFull MO.

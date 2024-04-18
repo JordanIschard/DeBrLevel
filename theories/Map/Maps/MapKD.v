@@ -1,6 +1,5 @@
 From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasses.
-Require Import Kernel.LevelInterface Kernel.Level.
-Require Import MapExtInterface MapExt MapLevelInterface.
+From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface.
 From MMaps Require Import MMaps.
 
 
@@ -9,11 +8,9 @@ From MMaps Require Import MMaps.
 (** ** Map with leveled keys and datas -- Implementation *)
 
 (** *** Map implementation with minimal constraints *)
-Module ShiftValidMapWL  (Key : ShiftValidOTWithLeibniz)
-                          (Data : ShiftValidETWithLeibniz) 
-                          (M : Interface.S Key)
-                          (MO : MapInterface Key Data M) 
-                            <: ShiftValidMapWLInterface Key Data M MO.
+Module IsLvlMapWL  (Key : IsLvlOTWL) (Data : IsLvlETWL) 
+                   (M : Interface.S Key) (MO : MapInterface Key Data M) 
+                            <: IsLvlMapWLInterface Key Data M MO.
 
 Import MO OP.P.
 Include MO.
@@ -613,17 +610,17 @@ Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
 Proof. intros; replace k with (k + 0) by lia; now apply shift_preserves_valid_1. Qed.
 
 
-End ShiftValidMapWL.
+End IsLvlMapWL.
 
 
 (** *** Map implementation fully constrained *)
-Module StrongShiftValidMapWL  (Key : StrongShiftValidOTWithLeibniz)
-                                (Data : StrongShiftValidETWithLeibniz) 
+Module IsBdlLvlMapWL  (Key : IsBdlLvlOTWL)
+                                (Data : IsBdlLvlETWL) 
                                 (M : Interface.S Key)
                                 (MO : MapInterface Key Data M) 
-                                 <: StrongShiftValidMapWLInterface Key Data M MO.
+                                 <: IsBdlLvlMapWLInterface Key Data M MO.
 
-Include ShiftValidMapWL Key Data M MO.
+Include IsLvlMapWL Key Data M MO.
 Import M OP.P.  
 
 Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
@@ -638,30 +635,30 @@ Proof.
     apply Data.eq_leibniz in Hvelt; now rewrite Hvelt.
 Qed.
 
-End StrongShiftValidMapWL.
+End IsBdlLvlMapWL.
 
 
 (** *** Map Make *)
 
-Module MakeShiftValidMapWL  (Key : ShiftValidOTWithLeibniz)
-                              (Data : ShiftValidETWithLeibniz) <: ShiftValidET.
+Module MakeLvlMapWL  (Key : IsLvlOTWL)
+                              (Data : IsLvlETWL) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include ShiftValidMapWL Key Data Raw Ext.
+  Include IsLvlMapWL Key Data Raw Ext.
   Include OP.P.
 
-End MakeShiftValidMapWL.
+End MakeLvlMapWL.
 
-Module MakeStrongShiftValidMapWL  (Key : StrongShiftValidOTWithLeibniz)
-                              (Data : StrongShiftValidETWithLeibniz) <: StrongShiftValidET.
+Module MakeBdlLvlMapWL  (Key : IsBdlLvlOTWL)
+                              (Data : IsBdlLvlETWL) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include StrongShiftValidMapWL Key Data Raw Ext.
+  Include IsBdlLvlMapWL Key Data Raw Ext.
   Include OP.P.
 
-End MakeStrongShiftValidMapWL.
+End MakeBdlLvlMapWL.
 
 
 
