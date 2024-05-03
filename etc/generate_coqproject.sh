@@ -33,7 +33,7 @@ COQPROJECT_HEADER=\
 if [ "$GENERATE_COQPROJECT_FOR_DUNE" == "true" ]; then
   COQPROJECT_HEADER="$COQPROJECT_HEADER
 # Dune compatibility
--Q _build/default/theories DeBrLevel
+-Q _build/default/theories DeBrLevel.theories
 "
 fi
 

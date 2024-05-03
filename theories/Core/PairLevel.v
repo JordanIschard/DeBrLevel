@@ -1,8 +1,7 @@
 From Coq Require Import Orders Lia RelationPairs Bool.Bool Structures.EqualitiesFacts.
-Require Import Kernel.LevelInterface Kernel.Level.
+From DeBrLevel Require Import LevelInterface Level.
 
-Module ShiftValidPairET (O1 : ShiftValidET) 
-                                   (O2 : ShiftValidET) <: ShiftValidET.
+Module IsLvlPairET (O1 : IsLvlET) (O2 : IsLvlET) <: IsLvlET.
 
 
 (** *** Definition *)
@@ -164,15 +163,14 @@ Qed.
 
 End valid.
 
-End ShiftValidPairET.
+End IsLvlPairET.
 
 
 
 (** ** Pair implementation with minimal constraints *)
-Module ShiftValidPairETWL (O1 : ShiftValidETWithLeibniz) 
-                                   (O2 : ShiftValidETWithLeibniz) <: ShiftValidETWithLeibniz.
+Module IsLvlPairETWL (O1 : IsLvlETWL) (O2 : IsLvlETWL) <: IsLvlETWL.
 
-Include ShiftValidPairET O1 O2.
+Include IsLvlPairET O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -182,14 +180,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End ShiftValidPairETWL.
+End IsLvlPairETWL.
 
 (** ** Pair implementation with minimal constraints with [validb] *)
-Module ShiftValidFullPairET (O1 : ShiftValidFullET) 
-                                       (O2 : ShiftValidFullET) 
-                                                <: ShiftValidFullET.
+Module IsLvlFullPairET (O1 : IsLvlFullET) 
+                                       (O2 : IsLvlFullET) 
+                                                <: IsLvlFullET.
 
-  Include ShiftValidPairET O1 O2.
+  Include IsLvlPairET O1 O2.
 
   (** *** Definition *)
   Section definition.
@@ -235,13 +233,13 @@ Module ShiftValidFullPairET (O1 : ShiftValidFullET)
 
   End valid.
   
-End ShiftValidFullPairET.
+End IsLvlFullPairET.
 
 (** ** Pair implementation with minimal constraints *)
-Module ShiftValidFullPairETWL (O1 : ShiftValidFullETWithLeibniz) 
-                                   (O2 : ShiftValidFullETWithLeibniz) <: ShiftValidFullETWithLeibniz.
+Module IsLvlFullPairETWL (O1 : IsLvlFullETWL) 
+                                   (O2 : IsLvlFullETWL) <: IsLvlFullETWL.
 
-Include ShiftValidFullPairET O1 O2.
+Include IsLvlFullPairET O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -251,14 +249,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End ShiftValidFullPairETWL.
+End IsLvlFullPairETWL.
 
 (** ** Pair implementation with fully constrained *)
-Module StrongShiftValidPairET (O1 : StrongShiftValidET) 
-                                         (O2 : StrongShiftValidET) 
-                                                <: StrongShiftValidET.
+Module IsBdlLvlPairET (O1 : IsBdlLvlET) 
+                                         (O2 : IsBdlLvlET) 
+                                                <: IsBdlLvlET.
 
-  Include ShiftValidPairET O1 O2.
+  Include IsLvlPairET O1 O2.
 
   Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
   Proof.
@@ -267,12 +265,12 @@ Module StrongShiftValidPairET (O1 : StrongShiftValidET)
     now apply O2.shift_valid_refl.
   Qed.
   
-End StrongShiftValidPairET.
+End IsBdlLvlPairET.
 
-Module StrongShiftValidPairETWL (O1 : StrongShiftValidETWithLeibniz) 
-                                   (O2 : StrongShiftValidETWithLeibniz) <: StrongShiftValidETWithLeibniz.
+Module IsBdlLvlPairETWL (O1 : IsBdlLvlETWL) 
+                                   (O2 : IsBdlLvlETWL) <: IsBdlLvlETWL.
 
-Include StrongShiftValidPairET O1 O2.
+Include IsBdlLvlPairET O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -282,14 +280,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End StrongShiftValidPairETWL.
+End IsBdlLvlPairETWL.
 
 (** ** Pair implementation with fully constrained with [validb] *)
-Module StrongShiftValidFullPairET (O1 : StrongShiftValidFullET) 
-                                             (O2 : StrongShiftValidFullET) 
-                                                    <: StrongShiftValidFullET.
+Module IsBdlLvlFullPairET (O1 : IsBdlLvlFullET) 
+                                             (O2 : IsBdlLvlFullET) 
+                                                    <: IsBdlLvlFullET.
 
-  Include ShiftValidFullPairET O1 O2.
+  Include IsLvlFullPairET O1 O2.
 
   Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
   Proof.
@@ -298,13 +296,13 @@ Module StrongShiftValidFullPairET (O1 : StrongShiftValidFullET)
     now apply O2.shift_valid_refl.
   Qed.
   
-End StrongShiftValidFullPairET.
+End IsBdlLvlFullPairET.
 
 
-Module StrongShiftValidFullPairETWL (O1 : StrongShiftValidFullETWithLeibniz) 
-                                   (O2 : StrongShiftValidFullETWithLeibniz) <: StrongShiftValidFullETWithLeibniz.
+Module IsBdlLvlFullPairETWL (O1 : IsBdlLvlFullETWL) 
+                                   (O2 : IsBdlLvlFullETWL) <: IsBdlLvlFullETWL.
 
-Include StrongShiftValidFullPairET O1 O2.
+Include IsBdlLvlFullPairET O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -314,11 +312,11 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End StrongShiftValidFullPairETWL.
+End IsBdlLvlFullPairETWL.
 
 
-Module ShiftValidPairOT (O1 : ShiftValidOT) 
-                                   (O2 : ShiftValidOT) <: ShiftValidOT.
+Module IsLvlPairOT (O1 : IsLvlOT) 
+                                   (O2 : IsLvlOT) <: IsLvlOT.
 
 Include OrdersEx.PairOrderedType O1 O2.
 
@@ -456,14 +454,14 @@ Qed.
 
 End valid.
 
-End ShiftValidPairOT.
+End IsLvlPairOT.
 
 
 (** ** Pair implementation with minimal constraints *)
-Module ShiftValidPairOTWL (O1 : ShiftValidOTWithLeibniz) 
-                                   (O2 : ShiftValidOTWithLeibniz) <: ShiftValidOTWithLeibniz.
+Module IsLvlPairOTWL (O1 : IsLvlOTWL) 
+                                   (O2 : IsLvlOTWL) <: IsLvlOTWL.
 
-Include ShiftValidPairOT O1 O2.
+Include IsLvlPairOT O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -473,14 +471,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End ShiftValidPairOTWL.
+End IsLvlPairOTWL.
 
 (** ** Pair implementation with minimal constraints with [validb] *)
-Module ShiftValidFullPairOT (O1 : ShiftValidFullOT) 
-                                       (O2 : ShiftValidFullOT) 
-                                                <: ShiftValidFullOT.
+Module IsLvlFullPairOT (O1 : IsLvlFullOT) 
+                                       (O2 : IsLvlFullOT) 
+                                                <: IsLvlFullOT.
 
-  Include ShiftValidPairOT O1 O2.
+  Include IsLvlPairOT O1 O2.
 
   (** *** Definition *)
   Section definition.
@@ -526,12 +524,12 @@ Module ShiftValidFullPairOT (O1 : ShiftValidFullOT)
 
   End valid.
   
-End ShiftValidFullPairOT.
+End IsLvlFullPairOT.
 
-Module ShiftValidFullPairOTWL (O1 : ShiftValidFullOTWithLeibniz) 
-                                   (O2 : ShiftValidFullOTWithLeibniz) <: ShiftValidFullOTWithLeibniz.
+Module IsLvlFullPairOTWL (O1 : IsLvlFullOTWL) 
+                                   (O2 : IsLvlFullOTWL) <: IsLvlFullOTWL.
 
-Include ShiftValidFullPairOT O1 O2.
+Include IsLvlFullPairOT O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -541,14 +539,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End ShiftValidFullPairOTWL.
+End IsLvlFullPairOTWL.
 
 (** ** Pair implementation with fully constrained *)
-Module StrongShiftValidPairOT (O1 : StrongShiftValidOT) 
-                                         (O2 : StrongShiftValidOT) 
-                                                <: StrongShiftValidOT.
+Module IsBdlLvlPairOT (O1 : IsBdlLvlOT) 
+                                         (O2 : IsBdlLvlOT) 
+                                                <: IsBdlLvlOT.
 
-  Include ShiftValidPairOT O1 O2.
+  Include IsLvlPairOT O1 O2.
 
   Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
   Proof.
@@ -557,12 +555,12 @@ Module StrongShiftValidPairOT (O1 : StrongShiftValidOT)
     now apply O2.shift_valid_refl.
   Qed.
   
-End StrongShiftValidPairOT.
+End IsBdlLvlPairOT.
 
-Module StrongShiftValidPairOTWL (O1 : StrongShiftValidOTWithLeibniz) 
-                                   (O2 : StrongShiftValidOTWithLeibniz) <: StrongShiftValidOTWithLeibniz.
+Module IsBdlLvlPairOTWL (O1 : IsBdlLvlOTWL) 
+                                   (O2 : IsBdlLvlOTWL) <: IsBdlLvlOTWL.
 
-Include StrongShiftValidPairOT O1 O2.
+Include IsBdlLvlPairOT O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -572,14 +570,14 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End StrongShiftValidPairOTWL.
+End IsBdlLvlPairOTWL.
 
 (** ** Pair implementation with fully constrained with [validb] *)
-Module StrongShiftValidFullPairOT (O1 : StrongShiftValidFullOT) 
-                                             (O2 : StrongShiftValidFullOT) 
-                                                    <: StrongShiftValidFullOT.
+Module IsBdlLvlFullPairOT (O1 : IsBdlLvlFullOT) 
+                                             (O2 : IsBdlLvlFullOT) 
+                                                    <: IsBdlLvlFullOT.
 
-  Include ShiftValidFullPairOT O1 O2.
+  Include IsLvlFullPairOT O1 O2.
 
   Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
   Proof.
@@ -588,12 +586,12 @@ Module StrongShiftValidFullPairOT (O1 : StrongShiftValidFullOT)
     now apply O2.shift_valid_refl.
   Qed.
   
-End StrongShiftValidFullPairOT.
+End IsBdlLvlFullPairOT.
 
-Module StrongShiftValidFullPairOTWL (O1 : StrongShiftValidFullOTWithLeibniz) 
-                                   (O2 : StrongShiftValidFullOTWithLeibniz) <: StrongShiftValidFullOTWithLeibniz.
+Module IsBdlLvlFullPairOTWL (O1 : IsBdlLvlFullOTWL) 
+                                   (O2 : IsBdlLvlFullOTWL) <: IsBdlLvlFullOTWL.
 
-Include StrongShiftValidFullPairOT O1 O2.
+Include IsBdlLvlFullPairOT O1 O2.
 
 Lemma eq_leibniz : forall x y, eq x y -> x = y.
 Proof. 
@@ -603,4 +601,4 @@ Proof.
   apply O2.eq_leibniz in H1; now subst.
 Qed.
 
-End StrongShiftValidFullPairOTWL.
+End IsBdlLvlFullPairOTWL.

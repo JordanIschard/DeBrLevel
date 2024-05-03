@@ -1,6 +1,5 @@
 From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasses.
-Require Import Kernel.LevelInterface Kernel.Level.
-Require Import MapExtInterface MapExt MapLevelInterface.
+From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface.
 From MMaps Require Import MMaps.
 
 
@@ -10,10 +9,10 @@ From MMaps Require Import MMaps.
 
 (** *** Map implementation with minimal constraints *)
 
-Module ShiftValidMap  (Key : ShiftValidOTWithLeibniz)
+Module IsLvlMap  (Key : IsLvlOTWL)
                        (Data : EqualityType) 
                        (M : Interface.S Key)
-                       (MO : MapInterface Key Data M) <: ShiftValidMapInterface Key Data M MO.
+                       (MO : MapInterface Key Data M) <: IsLvlMapInterface Key Data M MO.
 
 Import MO OP.P.
 Include MO.
@@ -84,7 +83,7 @@ Qed.
 (** **** Valid *)
 
 #[export] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv  valid_diamond valid_proper
-shift_proper shift_diamond : core.
+shift_proper shift_diamond Key.valid_eq : core.
 
 
 Lemma valid_Empty_spec : forall lb m,
@@ -144,7 +143,10 @@ Proof.
     destruct (Key.eq_dec x y); subst.
     -- exists e. unfold Add in H0; rewrite H0.
        rewrite e0 in *. rewrite add_add_1.
-       rewrite valid_add_notin_spec; auto; split; auto.
+       rewrite valid_add_notin_spec; auto; split; auto. 
+       eapply Key.valid_eq; eauto.
+       + reflexivity.
+       + now symmetry.
     -- apply IHm1 with (x := y) in Hvm as [v Hvm].
         + exists v. unfold Add in H0; rewrite H0.
           rewrite add_add_2.
@@ -534,16 +536,16 @@ Proof. intros; now apply shift_preserves_valid_1. Qed.
 Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
 Proof. intros; replace k with (k + 0) by lia; now apply shift_preserves_valid_1. Qed.
 
-End ShiftValidMap.
+End IsLvlMap.
 
 (** *** Map implementation fully constrained *)
-Module StrongShiftValidMap  (Key : StrongShiftValidOTWithLeibniz)
+Module IsBdlLvlMap  (Key : IsBdlLvlOTWL)
                             (Data : EqualityType) 
                             (M : Interface.S Key) 
                             (MO : MapInterface Key Data M) 
-                               <: StrongShiftValidMapInterface Key Data M MO.
+                               <: IsBdlLvlMapInterface Key Data M MO.
 
-Include ShiftValidMap Key Data M MO.
+Include IsLvlMap Key Data M MO.
 Import M OP.P.  
 
 Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
@@ -555,28 +557,28 @@ Proof.
     rewrite Key.shift_valid_refl; auto. now rewrite IHt0_1.
 Qed.
 
-End StrongShiftValidMap.
+End IsBdlLvlMap.
 
 
 
 (** *** Map Make *)
 
-Module MakeShiftValidMap (Key : ShiftValidOTWithLeibniz) (Data : EqualityType) <: ShiftValidET.
+Module MakeLvlMap (Key : IsLvlOTWL) (Data : EqualityType) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include ShiftValidMap Key Data Raw Ext.
+  Include IsLvlMap Key Data Raw Ext.
   Include OP.P.
 
-End MakeShiftValidMap.
+End MakeLvlMap.
 
 
-Module MakeStrongShiftValidMap (Key : StrongShiftValidOTWithLeibniz) 
-                                 (Data : EqualityType) <: StrongShiftValidET.
+Module MakeBdlLvlMap (Key : IsBdlLvlOTWL) 
+                                 (Data : EqualityType) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include StrongShiftValidMap Key Data Raw Ext.
+  Include IsBdlLvlMap Key Data Raw Ext.
   Include OP.P.
 
-End MakeStrongShiftValidMap.
+End MakeBdlLvlMap.

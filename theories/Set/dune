@@ -1,7 +1,0 @@
-(coq.theory 
- (name SetExt)
- (package coq-debr-lvl)
- (synopsis "Extension of the kernel with sets.")
- (theories Kernel))
-
-(include_subdirs qualified)

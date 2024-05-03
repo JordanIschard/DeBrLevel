@@ -1,6 +1,5 @@
 From Coq Require Import MSets Lia.
-Require Import Kernel.LevelInterface Kernel.Level.
-Require Import SetLevelInterface SetLevel.
+From DeBrLevel Require Import LevelInterface Level SetLevelInterface SetLevel.
 
 (** * Implementation -- Level Set
 
@@ -8,9 +7,9 @@ Require Import SetLevelInterface SetLevel.
   prove more lemmas because of the correspondence between the levels
   used by shift and the leveled element.
 *)
-Module Levels <: StrongShiftValidFullSetOTWLInterface Level.
+Module Levels <: IsBdlLvlFullSetOTWLInterface Level.
 
-  Include StrongShiftValidFullSetOTWLInterface Level.
+  Include IsBdlLvlFullSetOTWLInterface Level.
 
   Lemma shift_permute_1 : forall (t : t) lb k k',
     eq (shift lb k (shift lb k' t)) (shift (lb + k) k' (shift lb k t)).

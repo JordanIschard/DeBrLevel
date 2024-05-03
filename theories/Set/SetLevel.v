@@ -1,12 +1,10 @@
 From Coq Require Import MSets Lia.
-Require Import Kernel.Level Kernel.LevelInterface.
-Require Import SetLevelInterface SetOTwL SetOTwLInterface.
+From DeBrLevel Require Import Level LevelInterface SetLevelInterface SetOTwL SetOTwLInterface.
 
 (** * Implementation -- Set of leveled elements *)
 
 (** ** Set implementation with minimal constraints *)
-Module ShiftValidSetOTWL (T : ShiftValidOTWithLeibniz) 
-                                    <: (ShiftValidSetOTWLInterface T).
+Module IsLvlSetOTWL (T : IsLvlOTWL) <: (IsLvlSetOTWLInterface T).
 
   Include SetOTWithLeibniz T.
 
@@ -413,13 +411,13 @@ Module ShiftValidSetOTWL (T : ShiftValidOTWithLeibniz)
 
   End valid_1.
 
-End ShiftValidSetOTWL.
+End IsLvlSetOTWL.
 
 (** ** Set implementation with fully constrained *)
-Module StrongShiftValidSetOTWL (T : StrongShiftValidOTWithLeibniz) 
-                                            <: StrongShiftValidSetOTWLInterface T.
+Module IsBdlLvlSetOTWL (T : IsBdlLvlOTWL) 
+                                            <: IsBdlLvlSetOTWLInterface T.
 
-  Include ShiftValidSetOTWL T.
+  Include IsLvlSetOTWL T.
 
     Lemma shift_valid_refl : forall lb k s,
       valid lb s -> eq (shift lb k s) s.
@@ -435,13 +433,13 @@ Module StrongShiftValidSetOTWL (T : StrongShiftValidOTWithLeibniz)
         apply IHs1 in H1; now rewrite H1.
     Qed.
 
-End StrongShiftValidSetOTWL.
+End IsBdlLvlSetOTWL.
 
 (** ** Set implementation with minimal constraints with [validb] *)
-Module ShiftValidFullSetOTWL (T : ShiftValidFullOTWithLeibniz) 
-                                            <: ShiftValidFullSetOTWLInterface T.
+Module IsLvlFullSetOTWL (T : IsLvlFullOTWL) 
+                                            <: IsLvlFullSetOTWLInterface T.
 
-  Include ShiftValidSetOTWL T.
+  Include IsLvlSetOTWL T.
 
   (** *** Definition *)
   Section definition.
@@ -478,13 +476,13 @@ Module ShiftValidFullSetOTWL (T : ShiftValidFullOTWithLeibniz)
 
   End valid.
 
-End ShiftValidFullSetOTWL.
+End IsLvlFullSetOTWL.
 
 (** ** Set implementation with fully constrained with [validb] *)
-Module StrongShiftValidFullSetOTWL (T : StrongShiftValidFullOTWithLeibniz) 
-                                                <: StrongShiftValidFullSetOTWLInterface T.
+Module IsBdlLvlFullSetOTWL (T : IsBdlLvlFullOTWL) 
+                                                <: IsBdlLvlFullSetOTWLInterface T.
 
-  Include StrongShiftValidSetOTWL T.
+  Include IsBdlLvlSetOTWL T.
 
   (** *** Definition *)
   Section definition.
@@ -521,4 +519,4 @@ Module StrongShiftValidFullSetOTWL (T : StrongShiftValidFullOTWithLeibniz)
 
   End valid.
 
-End StrongShiftValidFullSetOTWL.
+End IsBdlLvlFullSetOTWL.

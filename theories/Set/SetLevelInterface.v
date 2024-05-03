@@ -1,6 +1,5 @@
 From Coq Require Import MSets.
-Require Import Kernel.Level Kernel.LevelInterface.
-Require Import SetOTwLInterface SetOTwL.
+From DeBrLevel Require Import Level LevelInterface SetOTwLInterface SetOTwL.
 
 (** * Interfaces -- Set Level
 
@@ -9,22 +8,21 @@ Require Import SetOTwLInterface SetOTwL.
 *)
 
 (** ** Set interface with minimal constraints *)
-Module Type ShiftValidSetOTWLGenInterface (T : ShiftValidOTWithLeibniz) 
-:= (SetOTWithLeibnizInterface T) <+ ShiftValid.
+Module Type IsLvlSetOTWLGenInterface (T : IsLvlOTWL) 
+:= (SetOTWithLeibnizInterface T) <+ IsLvl.
 
 (** ** Set interface fully constrained *)
-Module Type StrongShiftValidSetOTWLGenInterface (T : ShiftValidOTWithLeibniz) 
-:= (SetOTWithLeibnizInterface T) <+ StrongShiftValid.
+Module Type IsBdlLvlSetOTWLGenInterface (T : IsBdlLvlOTWL) 
+:= (SetOTWithLeibnizInterface T) <+ IsBdlLvl.
 
 (** ** Set interface with minimal constraints and extra lemmas 
 
-  In addition to lemmas from [ShiftValid], it is convenient to add lemmas that
+  In addition to lemmas from [IsLvl], it is convenient to add lemmas that
   describe the interaction between [shift], [valid] functions and classic functions like [add],[union],[singleton]...
 *)
-Module Type ShiftValidSetOTWLInterface (T : ShiftValidOTWithLeibniz) 
-                                                  <: ShiftValidSetOTWLGenInterface T.
+Module Type IsLvlSetOTWLInterface (T : IsLvlOTWL) <: IsLvlSetOTWLGenInterface T.
 
-  Include ShiftValidSetOTWLGenInterface T.
+  Include IsLvlSetOTWLGenInterface T.
 
   (** *** Valid *)
   Section valid.
@@ -70,13 +68,13 @@ Module Type ShiftValidSetOTWLInterface (T : ShiftValidOTWithLeibniz)
 
   End shift.
 
-End ShiftValidSetOTWLInterface.
+End IsLvlSetOTWLInterface.
 
 (** ** Set interface fully constrained with extra lemmas *)
-Module Type StrongShiftValidSetOTWLInterface (T : StrongShiftValidOTWithLeibniz) 
-                                                <: StrongShiftValidSetOTWLGenInterface T.
+Module Type IsBdlLvlSetOTWLInterface (T : IsBdlLvlOTWL) 
+                                                <: IsBdlLvlSetOTWLGenInterface T.
 
-  Include StrongShiftValidSetOTWLGenInterface T.
+  Include IsBdlLvlSetOTWLGenInterface T.
 
   (** *** Valid *)
   Section valid.
@@ -122,12 +120,12 @@ Module Type StrongShiftValidSetOTWLInterface (T : StrongShiftValidOTWithLeibniz)
 
   End shift.
 
-End StrongShiftValidSetOTWLInterface.
+End IsBdlLvlSetOTWLInterface.
 
 (** ** Set interface with minimal constraints, extra lemmas and [validb] *)
-Module Type ShiftValidFullSetOTWLInterface (T : ShiftValidFullOTWithLeibniz) 
-:= (ShiftValidSetOTWLInterface T) <+ HasValidFull.
+Module Type IsLvlFullSetOTWLInterface (T : IsLvlFullOTWL) 
+:= (IsLvlSetOTWLInterface T) <+ HasValidFull.
 
 (** ** Set interface fully constrained with extra lemmas and [validb] *)
-Module Type StrongShiftValidFullSetOTWLInterface (T : StrongShiftValidFullOTWithLeibniz) 
-:= (StrongShiftValidSetOTWLInterface T) <+ HasValidFull.
+Module Type IsBdlLvlFullSetOTWLInterface (T : IsBdlLvlFullOTWL) 
+:= (IsBdlLvlSetOTWLInterface T) <+ HasValidFull.

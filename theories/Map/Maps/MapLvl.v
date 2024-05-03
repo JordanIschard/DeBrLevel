@@ -1,7 +1,6 @@
 From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasses.
 From MMaps Require Import MMaps.
-Require Import Kernel.LevelInterface Kernel.Level.
-Require Import MapExtInterface MapExt MapLevelInterface MapK.
+From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface MapK.
 
 (** * Implementation -- Map *)
 
@@ -9,12 +8,12 @@ Require Import MapExtInterface MapExt MapLevelInterface MapK.
 
 (** *** Map implementation with minimal constraints *)
 
-Module ShiftValidMapLVL (Data : EqualityType) 
+Module IsLvlMapLVL (Data : EqualityType) 
                           (M : Interface.S Level)
                           (MO : MapLVLInterface Data M) 
-                          <: ShiftValidMapLVLInterface Data M MO.
+                          <: IsLvlMapLVLInterface Data M MO.
 
-Include ShiftValidMap Level Data M MO.
+Include IsLvlMap Level Data M MO.
 Import MO OP.P.
 
 Lemma shift_new_notin_spec : forall lb k t,
@@ -76,15 +75,15 @@ Proof.
     -- f_equal; now apply shift_max_spec.
 Qed.  
 
-End ShiftValidMapLVL.
+End IsLvlMapLVL.
 
 (** *** Map implementation fully constrained *)
-Module StrongShiftValidMapLVL (Data : EqualityType) 
+Module IsBdlLvlMapLVL (Data : EqualityType) 
                                 (M : Interface.S Level) 
                                 (MO : MapLVLInterface Data M) 
-                                   <: StrongShiftValidMapLVLInterface Data M MO.
+                                   <: IsBdlLvlMapLVLInterface Data M MO.
 
-Include ShiftValidMapLVL Data M MO.
+Include IsLvlMapLVL Data M MO.
 Import MO OP.P.
 
 Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
@@ -97,26 +96,26 @@ Proof.
     rewrite Level.shift_valid_refl; auto; reflexivity.
 Qed.
     
-End StrongShiftValidMapLVL.
+End IsBdlLvlMapLVL.
 
 
 (** *** Map Make *)
 
-Module MakeShiftValidMapLVL (Data : EqualityType) <: ShiftValidET.
+Module MakeLvlMapLVL (Data : EqualityType) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Level.
   Module Ext := MapETLVL Data Raw.
-  Include ShiftValidMapLVL Data Raw Ext.
+  Include IsLvlMapLVL Data Raw Ext.
   Include OP.P.
 
-End MakeShiftValidMapLVL.
+End MakeLvlMapLVL.
 
 
-Module MakeStrongShiftValidMapLVL (Data : EqualityType) <: StrongShiftValidET.
+Module MakeBdlLvlMapLVL (Data : EqualityType) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Level.
   Module Ext := MapETLVL Data Raw.
-  Include StrongShiftValidMapLVL Data Raw Ext.
+  Include IsBdlLvlMapLVL Data Raw Ext.
   Include OP.P.
 
-End MakeStrongShiftValidMapLVL.
+End MakeBdlLvlMapLVL.
