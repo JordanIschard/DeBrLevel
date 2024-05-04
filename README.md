@@ -1,4 +1,4 @@
-# _Support library_ for using De Bruijn levels
+# _Support library_ for using De Bruijn levels (version 1.1)
 
 ## Task List
 
