@@ -36,13 +36,14 @@ Proof.
   unfold RelationPairs.RelCompFun in *; simpl in *; now symmetry.
 Qed.
 
-Lemma eq_trans   : Transitive eq.
+Lemma eq_trans : Transitive eq.
 Proof. 
   red; intros; destruct x,y,z; unfold eq in *; split; destruct H,H0;
   unfold RelationPairs.RelCompFun in *; simpl in *; etransitivity; eauto.
 Qed.
 
-Lemma shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
+#[export]
+Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
 Proof.
   repeat red; intros; subst; destruct x1,y1.
   destruct H1; unfold RelationPairs.RelCompFun in *; simpl in *;
