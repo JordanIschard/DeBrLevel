@@ -1,4 +1,4 @@
-# _Support library_ for using De Bruijn levels (version 1.1)
+# _Support library_ for using De Bruijn levels (version 1.2)
 
 ## Task List
 
@@ -21,7 +21,7 @@ Here is the current version of the [documentation](/home/lifo/Bureau/Doctorat/[G
 In a lambda calculus term we have variables (`x`,`y`,`z`, ...) that can be _bound_ or _free_. In a term `t`, we state that a variable `x` is _free_ if there is no abstraction that use this variable name, otherwise the variable is _bound_.
 
 ```ocaml
-(* x is bind to the abstraction while y is free *)
+(- x is bind to the abstraction while y is free -)
 fun x -> x + y
 ```
 
@@ -123,29 +123,53 @@ make install
 
 ### DeBrLevel
 
-- [Core](theories/Core)
-  - [Level.v](theories/Core/Level.v)
-  - [LevelInterface.v](theories/Core/LevelInterface.v)
-  - [PairLevel.v](theories/Core/PairLevel.v)
-- [Map](theories/Map)
-  - [Mapkit](theories/Map/Mapkit)
-    - [MapExt.v](theories/Map/Mapkit/MapExt.v)
-    - [MapExtInterface.v](theories/Map/Mapkit/MapExtInterface.v)
-  - [Maps](theories/Map/Maps)
-    - [MapD.v](theories/Map/Maps/MapD.v)
-    - [MapK.v](theories/Map/Maps/MapK.v)
-    - [MapKD.v](theories/Map/Maps/MapKD.v)
-    - [MapLvl.v](theories/Map/Maps/MapLvl.v)
-    - [MapLvlD.v](theories/Map/Maps/MapLvlD.v)
-  - [MapLevel.v](theories/Map/MapLevel.v)
-  - [MapLevelInterface.v](theories/Map/MapLevelInterface.v)
-- [Set](theories/Set)
-  - [Setkit](theories/Set/Setkit)
-    - [SetOTwL.v](theories/Set/Setkit/SetOTwL.v)
-    - [SetOTwLInterface.v](theories/Set/Setkit/SetOTwLInterface.v)
-  - [Levels.v](theories/Set/Levels.v)
-  - [SetLevel.v](theories/Set/SetLevel.v)
-  - [SetLevelInterface.v](theories/Set/SetLevelInterface.v)
+# DeBrLevel
+
+- [doc/](/doc)
+  - [resources/](/doc/resources)
+    - [config.js](/doc/resources/config.js)
+    - [coqdoc.css](/doc/resources/coqdoc.css)
+    - [coqdocjs.css](/doc/resources/coqdocjs.css)
+    - [coqdocjs.js](/doc/resources/coqdocjs.js)
+    - [footer.html](/doc/resources/footer.html)
+    - [header.html](/doc/resources/header.html)
+- [etc/](/etc)
+  - [generate_coqproject.sh](/etc/generate_coqproject.sh)
+- [theories/](/theories)
+  - [Core/](/theories/Core)
+    - [Level.v](/theories/Core/Level.v)
+    - [LevelInterface.v](/theories/Core/LevelInterface.v)
+  - [Datatype/](/theories/Datatype)
+    - [OptionLevel.v](/theories/Datatype/OptionLevel.v)
+    - [PairLevel.v](/theories/Datatype/PairLevel.v)
+  - [List/](/theories/List)
+    - [ListLevel.v](/theories/List/ListLevel.v)
+    - [StreamLevel.v](/theories/List/StreamLevel.v)
+  - [Map/](/theories/Map)
+    - [Mapkit/](/theories/Map/Mapkit)
+      - [MapExt.v](/theories/Map/Mapkit/MapExt.v)
+      - [MapExtInterface.v](/theories/Map/Mapkit/MapExtInterface.v)
+    - [Maps/](/theories/Map/Maps)
+      - [MapD.v](/theories/Map/Maps/MapD.v)
+      - [MapK.v](/theories/Map/Maps/MapK.v)
+      - [MapKD.v](/theories/Map/Maps/MapKD.v)
+      - [MapLvl.v](/theories/Map/Maps/MapLvl.v)
+      - [MapLvlD.v](/theories/Map/Maps/MapLvlD.v)
+    - [MapLevel.v](/theories/Map/MapLevel.v)
+    - [MapLevelInterface.v](/theories/Map/MapLevelInterface.v)
+  - [Set/](/theories/Set)
+    - [Setkit/](/theories/Set/Setkit)
+      - [SetOTwL.v](/theories/Set/Setkit/SetOTwL.v)
+      - [SetOTwLInterface.v](/theories/Set/Setkit/SetOTwLInterface.v)
+    - [Levels.v](/theories/Set/Levels.v)
+    - [SetLevel.v](/theories/Set/SetLevel.v)
+    - [SetLevelInterface.v](/theories/Set/SetLevelInterface.v)
+- [Makefile](/Makefile)
+- [Makefile.coq.local](/Makefile.coq.local)
+- [README.md](/README.md)
+- [coq-debr-lvl.opam](/coq-debr-lvl.opam)
+- [dune](/dune)
+- [dune-project](/dune-project)
 
 ## Authors
 
