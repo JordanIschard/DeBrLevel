@@ -659,22 +659,3 @@ Module MakeBdlLvlMapWL  (Key : IsBdlLvlOTWL)
   Include OP.P.
 
 End MakeBdlLvlMapWL.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

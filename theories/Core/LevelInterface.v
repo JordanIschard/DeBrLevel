@@ -1,28 +1,57 @@
 From Coq Require MSets Structures.Equalities Structures.Orders.
 Import Structures.Equalities Structures.Orders.
 
-(** * Interfaces -- Level *)
+(** * Interfaces -- Level 
 
-(** ** Level
+  De-Bruijn has proposed a variation of the lambda calculus which instanciates variables
+  in a determinisc way. It defines two measures: the distance and the level. The distance,
+  latter called index, is the number of abstraction between a variable and its binder. The
+  level is the number of abstraction encountered since the root of the representative tree
+  of a term.
 
-  A level is a simple element that can be ordered.
+  For instance, λx.(λy.(x y) x) is equal to λ.(λ.(1 0) 0) with distances and λ.(λ.(0 1) 0) 
+  with levels.
+
+  This kind of representations are extremely basic and can be used in different context as
+  well as be embedded in data types or data structures.
+*)
+
+(** ** Level - Definition
+
+  A level itself only require to be ordered. We require also a ground value and
+  classic arithmetic operators on it. Thus, we define a level as a [Nat].
+
 *)
 Module Lvl <: Orders.OrderedTypeFull := Structures.OrdersEx.Nat_as_OT.
 
+(** ---- *)
+
 (** ** Valid and Shift interfaces 
 
-  Like open, close functions in the locally nameless representation,  valid and shift functions are required for
-  De Bruijn levels representation. For example the weakening of typing in a stlc cannot be expressed and proved without them.
+  We split the definition of an element that used levels in different module types.
+  First, we want to be as flexible as possible. Second, each modules types carries
+  an additional set of constraints.
 
-  In more general way, valid is used for define the order between levels and shift is used for increase the level.
+  We define a function called [shift] and a property called [valid]. It is the minimal set
+  of elements for working with levels. Their principles ared defined below.
 *)
 
-(** *** Valid function
+(** *** Valid Property
 
-  This function ensures the respect of the hierarchy given by the level representation. A valid leveled element according to a certain level l is an element where all leveled subterm is also valid. In the case of level, the valid function will be [<] and for a set of levels, all element from the must satisfies the valid property.
+  If we define an inductive type as containing levels, the questioning about the well-formation or ill-formation appears.
+  Thus we suppose a property [valid], to define by the user, which is satisfied if the instanciation is well formed.
+
+  What is a well formed type ? If we take the most basic case, a level, when can we state that a level is valid or not ?
+  We can only talk about a valid level regards of a lower bound [lb]. 
+
+  We use the case of the lambda calculus to illustrate it. Consider the term "x", the variable is free. Thus, how do we state
+  that it is a well formed term ? We suppose that "x" is defined in a certain context. Now, consider the term "λx.(x y)". "y" is 
+  free and "x" bound. The term is well formed if "y" is defined in a certain context. The lower bound can be here understood as 
+  the number of free variables.
+
 *)
 
-(** **** Minimal constraint for a valid function *)
+(** **** Minimal constraint for a valid property *)
 Module Type HasValid (Import T : EqualityType).
 
 Section operation.
@@ -44,9 +73,7 @@ End properties.
 End HasValid.
 
 
-
-
-(** **** Minimal constraint for a valid function which returns a boolean *)
+(** **** Minimal constraint for a valid property which returns a boolean *)
 Module Type HasValidb (Import T : EqualityType).
 
 Section operation.
@@ -63,10 +90,7 @@ End properties.
 
 End HasValidb.
 
-
-
-
-(** **** Intermediate constraint for valid functions (with Prop and boolean) *)
+(** **** Intermediate constraint for valid properties (with Prop and boolean) *)
 Module Type HasValidFull (Import T : EqualityType) (Import V : HasValid T) <: HasValidb T.
 
 Include HasValidb T.
@@ -83,20 +107,21 @@ End properties.
 
 End HasValidFull.
 
-
 (** ***  Shift function
 
-  The [shift] function increments the level and consequently the depth of the tree defined by the representation. This function takes three arguments: the lower bound [lb], the shift [k] and the leveled element [t]. All level contained in the leveled element lower than [lb] will be unchanged while the other ones would be incremented by
-  [k].
+  Like indices, we will often shift levels. Consequently, we ask to the user to define a [shift] function. This function 
+  takes three arguments: the lower bound [lb], the shift [k] and the leveled element [t]. The lower bound has the same 
+  meaning that the one in the [valid] property. In lambda calculus, we can say that we shift only bound variables knowing
+  a certain number of free variables. It is a main difference with indices. Indeed, free variables have a fix level 
+  defined. Thus, no need to shift them.
+  For instance, the shift function interacts as shown below with the levels.
 <<
-In the case of level directly.
-
 shift 0 2 2 = 4
 shift 3 2 2 = 2
 shift 65 0 98 = 98
 >>
 
-  In a lambda calculus term, certain variable can be free and are always represented by the smallest levels. Thus, it is interested to use the [lb] argument to avoid modification on it.
+  In a lambda calculus term, we can see the use of [lb].
 <<
 shift 1 3 (\. 0 1) = (\. 0 4)
 >>
@@ -130,8 +155,14 @@ End properties.
 
 End HasShift.
 
+(** ---- *)
 
-(** **** Intermediate constraint for valid and shift functions *)
+
+(** ** Leveled Module Type 
+
+  A type [t] that uses levels have to implements this module type.
+
+*)
 Module Type IsLeveled (Import T : EqualityType) <: HasShift T <: HasValid T.
 
 Include HasShift T <+ HasValid T.
@@ -153,7 +184,13 @@ End properties.
 End IsLeveled.
 
 
-(** **** Full constraint for valid and shift functions *)
+(** ** Bindless Leveled Module Type
+
+  A type [t] that uses levels without binders has a specific property. The [shift] function did not
+  impact the type if it shares the same lower bound with the [valid] property.
+  This kind of types is common actually. A set, a map or a pair does not imply binders.
+
+*)
 Module Type IsBindlessLeveled (Import T : EqualityType) <: IsLeveled T.
 
 Include IsLeveled T.
@@ -162,7 +199,6 @@ Parameter shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
 
 End IsBindlessLeveled.
 
-(** **** Full constraint for valid and shift functions *)
 Module Type IsBindlessLeveledEx (Import T : EqualityType) (Import IsLvl : IsLeveled T).
 
 Parameter shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
@@ -170,9 +206,10 @@ Parameter shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
 End IsBindlessLeveledEx.
 
 
+(** ---- *)
 
 
-(** ** Some Interfaces for work with well known module types *)
+(** ** Interfaces with _leibniz equality_ extension *)
 
 Module Type EqualityTypeWithLeibniz <: EqualityType.
 
@@ -207,9 +244,10 @@ Parameter eq_leibniz : forall x y, eq x y -> x = y.
 End OrderedTypeWithLeibniz.
 
 
+(** ---- *)
 
 
-(** ** Collection of Interfaces compositions *)
+(** ** Collection of starter interfaces *)
 
 Module Type IsLvl := IsLeveled.
 Module Type IsBdlLvl := IsBindlessLeveled.
