@@ -50,3 +50,5 @@ _CoqProject
 Makefile.coq
 Makefile.coq.conf
 doc/html
+.filestoinstall
+.vscode
