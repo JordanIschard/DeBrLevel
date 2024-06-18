@@ -287,13 +287,13 @@ Proof.
        now rewrite <- Key.shift_eq_iff.
 Qed.
 
-Lemma shift_refl : forall lb t, eq (shift lb 0 t) t.
+Lemma shift_zero_refl : forall lb t, eq (shift lb 0 t) t.
 Proof.
   intros; induction t0 using map_induction.
   - now apply shift_Empty_spec.
   - apply shift_Add_spec with (lb := lb) (k := 0) in H0 as H0'; auto.
     unfold Add in *. intro y.
-    rewrite H0,H0'; rewrite Key.shift_refl.
+    rewrite H0,H0'; rewrite Key.shift_zero_refl.
     destruct (Key.eq_dec y x); subst.
     -- repeat rewrite add_eq_o; auto; try now symmetry.
     -- repeat rewrite add_neq_o; auto; intro Heq; symmetry in Heq;
@@ -510,7 +510,7 @@ Proof.
     rewrite <- valid_Add_spec; eauto. now apply shift_notin_spec.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> k' - k = lb' - lb -> 
   valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
@@ -522,18 +522,18 @@ Proof.
     apply shift_Add_spec_1 with (lb := k) (k := k' - k) in H0; auto.
     rewrite <- valid_Add_spec with (m := (shift k (k' - k) t1)); eauto.
     -- repeat split; auto.
-        apply Key.shift_preserves_valid_2 with (lb := lb); assumption.
+        apply Key.shift_preserves_valid_gen with (lb := lb); assumption.
     -- now apply shift_notin_spec.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t,
+Lemma shift_preserves_valid_2 : forall lb lb' t,
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof. intros; eapply shift_preserves_valid_2; eauto. Qed.
+Proof. intros; eapply shift_preserves_valid_gen; eauto. Qed.
 
 Lemma shift_preserves_valid : forall k k' t, valid k t -> valid (k + k') (shift k k' t).
 Proof. intros; now apply shift_preserves_valid_1. Qed.
 
-Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
+Lemma shift_preserves_valid_zero : forall k t, valid k t -> valid k (shift k 0 t).
 Proof. intros; replace k with (k + 0) by lia; now apply shift_preserves_valid_1. Qed.
 
 End IsLvlMap.

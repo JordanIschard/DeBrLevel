@@ -3,8 +3,9 @@ From DeBrLevel Require Import Level LevelInterface MapExtInterface.
 
 (** * Interfaces -- Map Level with datas as equality types
 
-  Based on the overlay [MapExt] we defined interfaces for maps with shift and valid extension
-  with different levels of constraints.
+  Based on the overlay [MapExt] we defined interfaces for maps with [shift] and [valid].
+  The [shift] function is applied on all leveled elements (keys and/or data), and a map is 
+  valid under [k] if all leveled elements in it are also valid under [k]. 
 *)
 
 (** ** Map interface with leveled datas and basic keys *)

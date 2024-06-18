@@ -3,22 +3,20 @@ From DeBrLevel Require Import Level LevelInterface SetOTwLInterface SetOTwL.
 
 (** * Interfaces -- Set Level
 
-  Based on the overlay [SetOTwL] we defined interfaces for sets with shift and valid extension
-  with different levels of constraints.
+  Based on the overlay [SetOTwL] we defined interfaces for sets with [shift] and [valid].
 *)
 
-(** ** Set interface with minimal constraints *)
-Module Type IsLvlSetOTWLGenInterface (T : IsLvlOTWL) 
-:= (SetOTWithLeibnizInterface T) <+ IsLvl.
+(** ** General leveled set interface *)
+Module Type IsLvlSetOTWLGenInterface (T : IsLvlOTWL) := (SetOTWithLeibnizInterface T) <+ IsLvl.
 
-(** ** Set interface fully constrained *)
+(** ** General leveled set interface without binders in its elements *)
 Module Type IsBdlLvlSetOTWLGenInterface (T : IsBdlLvlOTWL) 
 := (SetOTWithLeibnizInterface T) <+ IsBdlLvl.
 
-(** ** Set interface with minimal constraints and extra lemmas 
+(** ** Leveled set interface 
 
   In addition to lemmas from [IsLvl], it is convenient to add lemmas that
-  describe the interaction between [shift], [valid] functions and classic functions like [add],[union],[singleton]...
+  describe the interaction between [shift], [valid] functions and classic functions like [add],[union],[singleton], etc.
 *)
 Module Type IsLvlSetOTWLInterface (T : IsLvlOTWL) <: IsLvlSetOTWLGenInterface T.
 
@@ -31,6 +29,7 @@ Module Type IsLvlSetOTWLInterface (T : IsLvlOTWL) <: IsLvlSetOTWLGenInterface T.
     Variable v : elt.
     Variable s s' : t.
 
+    (** [valid] is opaque outside, consequently we gives an explicit unfold lemma. *)
     Parameter valid_unfold : valid lb s <-> (For_all (T.valid lb) s).
     Parameter valid_add_spec : valid lb (add v s) -> T.valid lb v /\ valid lb s.
     Parameter valid_empty_spec : valid lb empty.

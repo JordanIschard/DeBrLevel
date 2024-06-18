@@ -4,7 +4,8 @@ From DeBrLevel Require Import LevelInterface.
 
 (** * Implementation -- Level 
 
-  A level in our library is a [nat]. it has to satisfied all constraints.
+  A level itself only require to be ordered. We require also a ground value and
+  classic arithmetic operators on it. Thus, we define a level as a [Nat].
 *)
 Module Level <: IsBdlLvlFullOTWL.
 
@@ -71,7 +72,7 @@ Module Level <: IsBdlLvlFullOTWL.
       destruct (Nat.leb_spec0 lb t); destruct (Nat.leb_spec0 lb t1); lia.
     Qed.
 
-    Lemma shift_refl : shift lb 0 t = t.
+    Lemma shift_zero_refl : shift lb 0 t = t.
     Proof.
       unfold shift; destruct (Nat.leb_spec0 lb t); auto.
     Qed.
@@ -177,7 +178,7 @@ Module Level <: IsBdlLvlFullOTWL.
       unfold valid,shift; intros lb k k' t Hvt; destruct (Nat.leb_spec0 lb t); lia.
     Qed.
 
-    Lemma shift_preserves_valid_2 : forall lb lb' k k' t,
+    Lemma shift_preserves_valid_gen : forall lb lb' k k' t,
       k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> 
       k' - k = lb' - lb -> 
       valid lb t -> valid lb' (shift k (k' - k) t).
@@ -191,12 +192,12 @@ Module Level <: IsBdlLvlFullOTWL.
         destruct (Nat.leb_spec0 k t0); simpl in *; lia.
     Qed.
 
-    Lemma shift_preserves_valid_3 : forall lb lb' t,
+    Lemma shift_preserves_valid_2 : forall lb lb' t,
       lb <= lb' -> valid lb t -> 
       valid lb' (shift lb (lb' - lb) t).
-    Proof. intros. eapply shift_preserves_valid_2; eauto. Qed. 
+    Proof. intros. eapply shift_preserves_valid_gen; eauto. Qed. 
 
-    Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
+    Lemma shift_preserves_valid_zero : forall k t, valid k t -> valid k (shift k 0 t).
     Proof. 
       intros; replace k with (k + 0); try lia;
       now apply shift_preserves_valid_1. 

@@ -1,6 +1,10 @@
 From Coq Require Import Orders Lia Bool.Bool Structures.EqualitiesFacts.
 From DeBrLevel Require Import LevelInterface Level.
 
+(** * Implementation -- Option 
+
+  Implementation of a leveled elements embedded in an optional type.
+*)
 Module IsLvlOptET (E : IsLvlET) <: IsLvlET.
 
 
@@ -30,26 +34,29 @@ End definition.
 (** *** Equality *)
 Section equality.
 
-Lemma eq_refl : Reflexive eq. 
+#[export]
+Instance eq_refl : Reflexive eq. 
 Proof. 
   red; intros; destruct x; unfold eq; auto.
   reflexivity.
 Qed.
 
-Lemma eq_sym  : Symmetric eq.
+#[export]
+Instance eq_sym  : Symmetric eq.
 Proof. 
   red; intros; destruct x,y; unfold eq in *; auto.
   now symmetry.
 Qed.
 
-Lemma eq_trans : Transitive eq.
+#[export]
+Instance eq_trans : Transitive eq.
 Proof. 
   red; intros; destruct x,y,z; unfold eq in *; auto.
   - transitivity t1; auto.
   - inversion H.
 Qed.
 
-#[global]
+#[export]
 Instance eq_equiv : Equivalence eq.
 Proof. 
   split.
@@ -98,10 +105,10 @@ Section shift.
 Variable lb k k' k'' : Level.t.
 Variable t : t.
 
-Lemma shift_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift lb 0 t) t.
 Proof.
   destruct t; unfold shift,eq; simpl; auto.
-  apply E.shift_refl. 
+  apply E.shift_zero_refl. 
 Qed.
 
 Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
@@ -160,20 +167,20 @@ Proof.
   apply (E.shift_preserves_valid_1 lb k k' _ Hvt).
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,  
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
   k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
   intros lb lb' k k' t. intros.
   destruct t; unfold valid in *; simpl in *; auto.
-  now apply (E.shift_preserves_valid_2 lb lb' k k').
+  now apply (E.shift_preserves_valid_gen lb lb' k k').
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t, 
+Lemma shift_preserves_valid_2 : forall lb lb' t, 
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof.  intros. eapply shift_preserves_valid_2; eauto. Qed.
+Proof.  intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
-Lemma shift_preserves_valid_4 : forall k t,
+Lemma shift_preserves_valid_zero : forall k t,
   valid k t -> valid k (shift k 0 t).
 Proof. 
   intros; replace k with (k + 0); try lia; 

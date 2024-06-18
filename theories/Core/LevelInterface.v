@@ -66,6 +66,7 @@ Variable k k' : Lvl.t.
 Variable t : t.
   
 Parameter valid_weakening : Lvl.le k k' -> valid k t -> valid k' t.
+
 #[export] Declare Instance valid_eq : Proper (Lvl.eq ==> eq ==> iff) valid.
 
 End properties.
@@ -100,7 +101,7 @@ Section properties.
 Variable k : Lvl.t.
 Variable t : t.
 
-Parameter validb_valid : validb k t = true <-> valid k t. 
+Parameter validb_valid  : validb k t = true  <->   valid k t. 
 Parameter validb_nvalid : validb k t = false <-> ~ valid k t. 
 
 End properties.
@@ -141,15 +142,16 @@ Section properties.
 Variable lb k k' k'' : Lvl.t.
 Variable t t' : t.
 
-Parameter shift_refl : eq (shift lb 0 t) t.
-Parameter shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
-Parameter shift_permute : eq (shift lb k (shift lb k' t)) (shift lb k' (shift lb k t)).
-Parameter shift_unfold : eq (shift lb (k + k') t) (shift (lb + k) k' (shift lb k t)). 
-Parameter shift_unfold_1 :
+Parameter shift_zero_refl : eq (shift lb 0 t) t.
+Parameter shift_trans     : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
+Parameter shift_permute   : eq (shift lb k (shift lb k' t)) (shift lb k' (shift lb k t)).
+Parameter shift_unfold    : eq (shift lb (k + k') t) (shift (lb + k) k' (shift lb k t)). 
+Parameter shift_unfold_1  :
   k <= k' -> k' <= k'' -> eq (shift k' (k'' - k') (shift k  (k' - k) t)) (shift k (k'' - k) t).
 
-#[export] Declare Instance shift_eq : Proper (Lvl.eq ==> Lvl.eq ==> eq ==> eq) shift.
-Parameter shift_eq_iff : eq t t' <-> eq (shift lb k t) (shift lb k t').
+#[export] 
+Declare Instance shift_eq : Proper (Lvl.eq ==> Lvl.eq ==> eq ==> eq) shift.
+Parameter shift_eq_iff    : eq t t' <-> eq (shift lb k t) (shift lb k t').
 
 End properties.
 
@@ -172,12 +174,13 @@ Section properties.
   Variable lb lb' k k' : Lvl.t.
   Variable t : t.
 
-  Parameter shift_preserves_valid : valid k t -> valid (k + k') (shift k k' t).
+  Parameter shift_preserves_valid_gen :  
+    k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> k' - k = lb' - lb ->
+    valid lb t -> valid lb' (shift k (k' - k) t).
+  Parameter shift_preserves_valid   : valid k t -> valid (k + k') (shift k k' t).
   Parameter shift_preserves_valid_1 : valid k t -> valid (k + k') (shift lb k' t).
-  Parameter shift_preserves_valid_2 :  k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
-    k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
-  Parameter shift_preserves_valid_3 : lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-  Parameter shift_preserves_valid_4 : valid k t -> valid k (shift k 0 t).
+  Parameter shift_preserves_valid_2 : lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
+  Parameter shift_preserves_valid_zero : valid k t -> valid k (shift k 0 t).
 
 End properties.
 

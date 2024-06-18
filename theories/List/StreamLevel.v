@@ -97,12 +97,12 @@ Section shift.
 Variable lb k k' k'' : Level.t.
 Variable t : t.
 
-Lemma shift_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift lb 0 t) t.
 Proof.
   unfold eq, shift. apply ntheq_eqst.
   intros. rewrite Str_nth_map.
   apply E.eq_leibniz.
-  apply E.shift_refl. 
+  apply E.shift_zero_refl. 
 Qed.
 
 Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
@@ -175,7 +175,7 @@ Proof.
   now apply E.shift_preserves_valid_1.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,  
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
   k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
@@ -183,20 +183,20 @@ Proof.
   rewrite <- ForAll_map. revert t. 
   cofix shift_preserves_valid; intros.
   constructor; destruct H; auto.
-  now apply E.shift_preserves_valid_2 with lb.
+  now apply E.shift_preserves_valid_gen with lb.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t, 
+Lemma shift_preserves_valid_2 : forall lb lb' t, 
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
 Proof.
   unfold valid,shift in *; intros lb lb' t Hle.
   rewrite <- ForAll_map. revert t. 
   cofix shift_preserves_valid; intros.
   constructor; destruct H; auto.
-  now apply E.shift_preserves_valid_3.
+  now apply E.shift_preserves_valid_2.
 Qed.
 
-Lemma shift_preserves_valid_4 : forall k t,
+Lemma shift_preserves_valid_zero : forall k t,
   valid k t -> valid k (shift k 0 t).
 Proof.
   intros; replace k with (k + 0); try lia; 

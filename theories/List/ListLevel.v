@@ -87,10 +87,10 @@ Section shift.
 Variable lb k k' k'' : Level.t.
 Variable t t' : t.
 
-Lemma shift_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift lb 0 t) t.
 Proof.
   unfold eq; induction t; simpl; f_equal; auto.
-  apply E.eq_leibniz; now apply E.shift_refl. 
+  apply E.eq_leibniz; now apply E.shift_zero_refl. 
 Qed.
 
 Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
@@ -229,7 +229,7 @@ Proof.
     now apply E.shift_preserves_valid_1.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,  
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
   k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
@@ -238,14 +238,14 @@ Proof.
   - apply valid_nil_spec.
   - rewrite valid_cons_spec in *; 
     destruct H; split; auto.
-    now apply E.shift_preserves_valid_2 with lb.
+    now apply E.shift_preserves_valid_gen with lb.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t, 
+Lemma shift_preserves_valid_2 : forall lb lb' t, 
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof.  intros. eapply shift_preserves_valid_2; eauto. Qed.
+Proof.  intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
-Lemma shift_preserves_valid_4 : forall k t,
+Lemma shift_preserves_valid_zero : forall k t,
   valid k t -> valid k (shift k 0 t).
 Proof. 
   intros; replace k with (k + 0); try lia; 

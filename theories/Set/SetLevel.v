@@ -297,14 +297,14 @@ Module IsLvlSetOTWL (T : IsLvlOTWL) <: (IsLvlSetOTWLInterface T).
                 * apply diff_notin_spec; auto.
     Qed.
   
-    Lemma shift_refl : forall lb s,
+    Lemma shift_zero_refl : forall lb s,
       eq (shift lb 0 s) s.
     Proof.
       unfold shift; intros. induction s using set_induction.
       - apply empty_is_empty_1 in H; apply eq_leibniz in H; subst.  
         now rewrite map_empty_spec.
       - apply Add_inv in H0; subst; rewrite map_add_notin_spec; auto.
-        apply eq_leibniz in IHs1; rewrite IHs1; rewrite T.shift_refl; reflexivity.
+        apply eq_leibniz in IHs1; rewrite IHs1; rewrite T.shift_zero_refl; reflexivity.
     Qed.
 
     Lemma shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
@@ -390,23 +390,23 @@ Module IsLvlSetOTWL (T : IsLvlOTWL) <: (IsLvlSetOTWLInterface T).
       valid k s -> valid (k + k') (shift k k' s).
     Proof. intros; now apply shift_preserves_valid_1. Qed.
 
-    Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
+    Lemma shift_preserves_valid_zero : forall k t, valid k t -> valid k (shift k 0 t).
     Proof. intros; replace k with (k + 0); try lia; now apply shift_preserves_valid_1. Qed.
 
-    Lemma shift_preserves_valid_2 : forall lb lb' k k' t,
+    Lemma shift_preserves_valid_gen : forall lb lb' k k' t,
       k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> k' - k = lb' - lb -> 
       valid lb t -> valid lb' (shift k (k' - k) t).
     Proof.
       unfold valid,For_all in *; intros. apply shift_in_e_spec in H5. 
       destruct H5 as [y [Heq HIn]]; subst.
-      apply T.shift_preserves_valid_2 with (lb := lb); auto.
+      apply T.shift_preserves_valid_gen with (lb := lb); auto.
       apply H4. now rewrite <- shift_in_spec in HIn.
     Qed.
 
-    Lemma shift_preserves_valid_3 : forall lb lb' t,
+    Lemma shift_preserves_valid_2 : forall lb lb' t,
       lb <= lb' -> valid lb t -> 
       valid lb' (shift lb (lb' - lb) t).
-    Proof. intros. eapply shift_preserves_valid_2; eauto. Qed.
+    Proof. intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
 
   End valid_1.
