@@ -3,16 +3,13 @@ From MMaps Require Import MMaps.
 From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface.
 
 
-(** * Implementation - Map *)
+(** * Implementation - Map - [OTK/LvlD] *)
 
-(** ** Map with leveled datas and leveled keys *)
+(** ** Leveled Map Implementation *)
 
-(** *** Map implementation with minimal constraints *)
-
-Module IsLvlMapD (Key : OrderedTypeWithLeibniz)
-                        (Data : IsLvlETWL) 
-                        (M : Interface.S Key)
-                        (MO : MapInterface Key Data M) <: IsLvlMapDInterface Key Data M MO.
+Module IsLvlMapD 
+  (Key : OrderedTypeWithLeibniz) (Data : IsLvlETWL) 
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsLvlMapDInterface Key Data M MO.
 
 Import MO OP.P.
 Include MO.            
@@ -30,9 +27,11 @@ Definition valid (lb : Lvl.t) (m : t) :=
 
 End definition.
 
-(** **** Some facts *)
+(** **** Facts *)
 
+#[export]
 Instance iff_equiv : Equivalence iff := _.
+#[export]
 Instance logic_eq_equiv : forall A, Equivalence (@Logic.eq A) := _.
 
 Fact valid_diamond : forall lb, Diamond iff
@@ -46,7 +45,7 @@ Proof.
       rewrite <- H1; split; auto.
 Qed.
 
-#[local]
+#[export]
 Instance valid_proper : forall lb, Proper (Key.eq ==> Logic.eq ==> iff ==> iff)
   (fun (key0 : Key.t) (v0 : Data.t) 
         (acc : Prop) => Data.valid lb v0 /\ acc).
@@ -55,7 +54,7 @@ Proof.
   now rewrite <- H1 in *.
 Qed.
 
-#[local]
+#[export]
 Instance shift_proper : forall lb k,
   Proper (Key.eq ==> Logic.eq ==> eq ==> eq)
   (fun (key0 : Key.t) (v0 : Data.t) 
@@ -72,19 +71,41 @@ Proof.
   rewrite add_add_2; try reflexivity; assumption.
 Qed.
 
-(** **** Valid *)
+(** **** [valid] property *)
 
 #[export] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv  valid_diamond valid_proper
-shift_proper shift_diamond : core.
+                       shift_proper shift_diamond : core.
 
-Lemma valid_Empty_spec : forall lb m,
-  Empty m -> valid lb m.
+Lemma valid_Empty_spec : forall lb m, Empty m -> valid lb m.
 Proof.
   intros; unfold valid; eapply fold_Empty in H; auto. now rewrite H.
 Qed.
 
 Lemma valid_empty_spec : forall lb, valid lb M.empty.
 Proof. intros. apply valid_Empty_spec. apply empty_1. Qed.
+
+Lemma valid_Add_spec_1 : forall lb x v m m',
+  ~ M.In x m -> Add x v m m' -> 
+  Data.valid lb v /\ valid lb m <-> valid lb m'.
+Proof.
+  unfold valid in *; split; intros.
+  - rewrite fold_Add with (i := True); eauto.
+  - rewrite fold_Add with (i := True) in H1; eauto.
+Qed.
+  
+#[export]
+Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
+Proof.
+  repeat red; split; subst; revert y y0 H0; rename x0 into m;
+  induction m using map_induction; intros.
+  - apply valid_Empty_spec. rewrite Empty_eq_spec; eauto; now symmetry.
+  - rewrite <- valid_Add_spec_1 in H2; eauto.
+    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec_1; eauto.
+  
+  - now apply valid_Empty_spec.
+  - rewrite <- valid_Add_spec_1; eauto.
+    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec_1 in H2; eauto.
+Qed.
 
 Lemma valid_add_notin_spec : forall lb x v m,
   ~ M.In x m -> valid lb (M.add x v m) <-> Data.valid lb v /\ valid lb m.
@@ -94,46 +115,13 @@ Proof.
   - destruct H0. rewrite fold_add with (i := True); eauto.
 Qed.
 
-Lemma valid_Add_spec : forall lb x v m m',
-  ~ M.In x m -> Add x v m m' -> 
-  Data.valid lb v /\ valid lb m <-> valid lb m'.
-Proof.
-  unfold valid in *; split; intros.
-  - rewrite fold_Add with (i := True); eauto.
-  - rewrite fold_Add with (i := True) in H1; eauto.
-Qed.
-
-Lemma valid_find_spec : forall lb x v m,
-  valid lb m -> M.find x m = Some v -> Data.valid lb v.
-Proof.
-  intros lb x v m; induction m using map_induction; intros.
-  - exfalso; unfold Empty in H; apply (H x v); now apply find_2.
-  - apply (valid_Add_spec lb x0 e m1 m2) in H1 as [Hvr Hvm1]; auto.
-    unfold Add in *; rewrite H0 in *. rewrite add_o in H2. destruct (Key.eq_dec x0 x);
-    auto; inversion H2; now subst.
-Qed. 
-  
-#[global]
-Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
-Proof.
-  repeat red; split; subst; revert y y0 H0; rename x0 into m;
-  induction m using map_induction; intros.
-  - apply valid_Empty_spec. rewrite Empty_eq_spec; eauto; now symmetry.
-  - rewrite <- valid_Add_spec in H2; eauto.
-    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec; eauto.
-  
-  - now apply valid_Empty_spec.
-  - rewrite <- valid_Add_spec; eauto.
-    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec in H2; eauto.
-Qed.
-
 Lemma valid_add_in_spec : forall k x m,
   M.In x m -> valid k m -> exists v, valid k (M.add x v m).
 Proof.
   intros k x m; revert k x; induction m using map_induction; intros k y HIn Hvm.
   - unfold Empty in *; exfalso.
     destruct HIn as [z HM]; now apply (H y z).
-  - rewrite <- valid_Add_spec in Hvm; eauto; destruct Hvm as [Hvx Hvm].
+  - rewrite <- valid_Add_spec_1 in Hvm; eauto; destruct Hvm as [Hvx Hvm].
     destruct (Key.eq_dec x y); subst.
     -- exists e. unfold Add in H0; rewrite H0.
        rewrite e0 in *. rewrite add_add_1.
@@ -151,23 +139,46 @@ Proof.
           exists v'; now apply find_2.
 Qed.
 
-Lemma valid_add_spec : forall m x (v : Data.t) lb,
-  Data.valid lb v /\ valid lb m -> valid lb (M.add x v m).
+Lemma valid_add_spec : forall lb x v m,
+  Data.valid lb v /\ valid lb m <-> valid lb (M.add x v m).
 Proof.
-  intro m; induction m using map_induction.
-  - intros x v lb []. rewrite valid_add_notin_spec; try now split.
-    intro i; unfold Empty in H; destruct i; exfalso; now apply (H x x0).
-  - intros y v lb []. rewrite <- valid_Add_spec in H2; eauto; destruct H2.
+  intros lb x v m; revert lb x v.
+  induction m using map_induction.
+  - intros lb x v. split.
+    -- intros []. rewrite valid_add_notin_spec; try now split.
+       intro i; unfold Empty in H; destruct i; exfalso; now apply (H x x0).
+    -- intro. admit.
+  - 
+  (*
+  intros lb y v []. rewrite <- valid_Add_spec_1 in H2; eauto; destruct H2.
     unfold Add in H0; rewrite H0. destruct (Key.eq_dec y x).
     -- apply Key.eq_leibniz in e0; subst. rewrite add_shadow. 
        apply IHm1; now split.
     -- rewrite add_add_2; auto. rewrite valid_add_notin_spec.
        + split; auto.
        + intro. rewrite add_in_iff in H4; destruct H4; try contradiction.
+  *)
+Admitted.
+
+Lemma valid_Add_spec : forall lb x v m m',
+  Add x v m m' -> 
+  Data.valid lb v /\ valid lb m <-> valid lb m'.
+Proof.
+  intros. unfold Add in H. rewrite H. apply valid_add_spec.
 Qed.
 
+Lemma valid_find_spec : forall lb x v m,
+  valid lb m -> M.find x m = Some v -> Data.valid lb v.
+Proof.
+  intros lb x v m; induction m using map_induction; intros.
+  - exfalso; unfold Empty in H; apply (H x v); now apply find_2.
+  - apply (valid_Add_spec_1 lb x0 e m1 m2) in H1 as [Hvr Hvm1]; auto.
+    unfold Add in *; rewrite H0 in *. rewrite add_o in H2. destruct (Key.eq_dec x0 x);
+    auto; inversion H2; now subst.
+Qed. 
 
-(** **** Shift *)
+
+(** **** [shift] property *)
 
 Lemma shift_Empty_spec : forall lb k m,
   Empty m -> eq (shift lb k m) m.
@@ -489,7 +500,7 @@ Proof.
   - now apply shift_add_notin_spec.
 Qed.
 
-(** **** Valid continued *)
+(** **** Interaction property between [valid] and [shift]  *)
 
 
 Lemma valid_weakening : forall k k' t, (k <= k') -> valid k t -> valid k' t.
@@ -515,7 +526,7 @@ intros lb k k' Hvt.
   apply Data.shift_preserves_valid_1 with (lb := lb) (k' := k') in Hv.
 
   apply shift_Add_spec_1 with (lb := lb) (k := k') in H0; auto.
-  rewrite <- valid_Add_spec; eauto. now apply shift_notin_spec.
+  rewrite <- valid_Add_spec; eauto.
 Qed.
 
 Lemma shift_preserves_valid_gen : forall lb lb' k k' t,
@@ -529,9 +540,8 @@ intros lb lb' k k' t; induction t using map_induction; intros.
   eapply IHt1 in Hvt; eauto.
   apply shift_Add_spec_1 with (lb := k) (k := k' - k) in H0; auto.
   rewrite <- valid_Add_spec with (m := (shift k (k' - k) t1)); eauto.
-  -- split; auto.
-     apply Data.shift_preserves_valid_gen with (lb := lb); assumption.
-  -- now apply shift_notin_spec.
+  split; auto.
+  apply Data.shift_preserves_valid_gen with (lb := lb); assumption.
 Qed.
 
 Lemma shift_preserves_valid_2 : forall lb lb' t,
@@ -547,12 +557,10 @@ Proof. intros; replace k with (k + 0) by lia; now apply shift_preserves_valid_1.
 End IsLvlMapD.
 
 
-(** *** Map implementation fully constrained *)
-Module IsBdlLvlMapD  (Key : OrderedTypeWithLeibniz)
-                            (Data : IsBdlLvlETWL) 
-                            (M : Interface.S Key) 
-                            (MO : MapInterface Key Data M) 
-                               <: IsBdlLvlMapDInterface Key Data M MO.
+(** ** Bindless Leveled Map Implementation *)
+Module IsBdlLvlMapD  
+  (Key : OrderedTypeWithLeibniz) (Data : IsBdlLvlETWL) 
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvlMapDInterface Key Data M MO.
 
 Include IsLvlMapD Key Data M MO.
 Import M OP.P.  
@@ -569,20 +577,22 @@ Qed.
 
 End IsBdlLvlMapD.
 
+(** ---- *)
 
-(** *** Map Make *)
+(** * Make - Leveled Map [OTK/LvlD] *)
 
-Module MakeLvlMapD (Key : OrderedTypeWithLeibniz) 
-                            (Data : IsLvlETWL) <: IsLvlET.
+Module MakeLvlMapD 
+  (Key : OrderedTypeWithLeibniz) (Data : IsLvlETWL) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
   Include IsLvlMapD Key Data Raw Ext.
+  Include OP.P.
 
 End MakeLvlMapD.
 
-Module MakeBdlLvlMapD (Key : OrderedTypeWithLeibniz) 
-                                  (Data : IsBdlLvlETWL) <: IsBdlLvlET.
+Module MakeBdlLvlMapD 
+  (Key : OrderedTypeWithLeibniz) (Data : IsBdlLvlETWL) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.

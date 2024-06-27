@@ -8,35 +8,35 @@ From DeBrLevel Require Import LevelInterface Level SetLevelInterface SetLevel.
 *)
 Module Levels <: IsBdlLvlFullOTWL.
 
-  Include MakeIsBdlLvlFullSet Level.
-  Import St.
+Include MakeBdlLvlFullSet Level.
+Import St.
 
-  Lemma shift_permute_1 : forall (t : t) lb k k',
-    eq (shift lb k (shift lb k' t)) (shift (lb + k) k' (shift lb k t)).
-  Proof.
-    intro t; induction t using set_induction; intros.
-    - repeat rewrite shift_Empty_spec; eauto. reflexivity.
-    - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; auto.
-      -- split; intros; rewrite add_spec in *; destruct H0;
-          try (left; rewrite H0; now rewrite Level.shift_permute_1);
-          right; now rewrite IHt1 in *.
-      -- rewrite shift_notin_spec in H; eauto.
-      -- rewrite shift_notin_spec in H; eauto.
-  Qed.
+Lemma shift_permute_1 : forall (t : t) lb k k',
+  eq (shift lb k (shift lb k' t)) (shift (lb + k) k' (shift lb k t)).
+Proof.
+  intro t; induction t using set_induction; intros.
+  - repeat rewrite shift_Empty_spec; eauto. reflexivity.
+  - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; auto.
+    -- split; intros; rewrite add_spec in *; destruct H0;
+        try (left; rewrite H0; now rewrite Level.shift_permute_1);
+        right; now rewrite IHt1 in *.
+    -- rewrite shift_notin_spec in H; eauto.
+    -- rewrite shift_notin_spec in H; eauto.
+Qed.
 
-  Lemma shift_permute_2 : forall (t : t) lb lb' k k',
-    lb <= lb' -> eq (shift lb k (shift lb' k' t)) (shift (lb' + k) k' (shift lb k t)).
-  Proof.
-    intro t. induction t using set_induction; intros.
-    - repeat rewrite shift_Empty_spec; eauto; reflexivity.
-    - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; auto.
-      -- split; intros; rewrite add_spec in *; destruct H0.
-          + subst; left; now apply Level.shift_permute_2.
-          + right. rewrite IHt1 in H0; auto.
-          + subst; left; symmetry; now apply Level.shift_permute_2.
-          + right. rewrite <- IHt1 in H0; auto.
-      -- rewrite shift_notin_spec in H; eauto.
-      -- rewrite shift_notin_spec in H; eauto.
-  Qed.
+Lemma shift_permute_2 : forall (t : t) lb lb' k k',
+  lb <= lb' -> eq (shift lb k (shift lb' k' t)) (shift (lb' + k) k' (shift lb k t)).
+Proof.
+  intro t. induction t using set_induction; intros.
+  - repeat rewrite shift_Empty_spec; eauto; reflexivity.
+  - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; auto.
+    -- split; intros; rewrite add_spec in *; destruct H0.
+        + subst; left; now apply Level.shift_permute_2.
+        + right. rewrite IHt1 in H0; auto.
+        + subst; left; symmetry; now apply Level.shift_permute_2.
+        + right. rewrite <- IHt1 in H0; auto.
+    -- rewrite shift_notin_spec in H; eauto.
+    -- rewrite shift_notin_spec in H; eauto.
+Qed.
 
 End Levels.

@@ -51,7 +51,7 @@ Module Lvl <: Orders.OrderedTypeFull := Structures.OrdersEx.Nat_as_OT.
 
 *)
 
-(** **** Minimal constraint for a valid property *)
+(** **** [valid] property interface *)
 Module Type HasValid (Import T : EqualityType).
 
 Section operation.
@@ -74,7 +74,7 @@ End properties.
 End HasValid.
 
 
-(** **** Minimal constraint for a valid property which returns a boolean *)
+(** **** Boolean version of [valid] named [validb] *)
 Module Type HasValidb (Import T : EqualityType).
 
 Section operation.
@@ -91,7 +91,7 @@ End properties.
 
 End HasValidb.
 
-(** **** Intermediate constraint for valid properties (with Prop and boolean) *)
+(** **** [valid] property with its boolean version [validb] *)
 Module Type HasValidFull (Import T : EqualityType) (Import V : HasValid T) <: HasValidb T.
 
 Include HasValidb T.
@@ -128,7 +128,7 @@ shift 1 3 (\. 0 1) = (\. 0 4)
 >>
 *)
 
-(** **** Minimal constraint for a shift function *)
+(** **** [shift] function property *)
 Module Type HasShift (Import T : EqualityType).
 
 Section operation.

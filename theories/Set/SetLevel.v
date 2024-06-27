@@ -1,15 +1,14 @@
 From Coq Require Import MSets Lia.
 From DeBrLevel Require Import Level LevelInterface SetLevelInterface SetOTwL SetOTwLInterface.
 
-(** * Implementation - Set of leveled elements *)
+(** * Implementation - Leveled Set *)
 
+(** ** Leveled Map Implementation *)
+Module IsLvlSet 
+  (T : IsLvlOTWL) (Import St : SetOTWithLeibnizInterface T) <: IsLvlSetInterface T St.
 
-Module IsLvlSet (T : IsLvlOTWL) (St : SetOTWithLeibnizInterface T) <: IsLvlSetInterface T St.
-
-Import St.
 
 (** *** Definition *)
-Section definition.
 
 Definition t := t.
 
@@ -29,9 +28,7 @@ Definition shift (lb : nat) (k : nat) (s : t) : t := map (T.shift lb k) s.
 
 Definition valid (k : nat) (s : t) := (For_all (T.valid k) s).
 
-End definition.
-
-(** *** Valid Property (part 1) *)
+(** *** [valid] property *)
 Section valid.
 
 Variable lb : nat.
@@ -70,9 +67,22 @@ Proof.
   unfold valid,For_all in *; intros; now apply H.
 Qed.
 
+#[export]
+Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
+Proof.
+  repeat red; intros; apply eq_leibniz in H0; subst; split; auto.
+Qed.
+
+Lemma valid_weakening: forall k k' s,
+  (k <= k') -> valid k s -> valid k' s.
+Proof. 
+  intros; unfold valid,For_all in *; intros; apply H0 in H1. 
+  eapply T.valid_weakening; eauto.
+Qed.
+
 End valid.
 
-(** *** Shift *)
+(** *** [shift] property *)
 Section shift.
 
 Variable lb k : nat.
@@ -371,20 +381,7 @@ Proof.
     -- now apply shift_notin_spec.
 Qed.
 
-(** *** Valid property (part 2) *)
-
-#[export]
-Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
-Proof.
-  repeat red; intros; apply eq_leibniz in H0; subst; split; auto.
-Qed.
-
-Lemma valid_weakening: forall k k' s,
-  (k <= k') -> valid k s -> valid k' s.
-Proof. 
-  intros; unfold valid,For_all in *; intros; apply H0 in H1. 
-  eapply T.valid_weakening; eauto.
-Qed.
+(** *** Interaction property between [valid] and [shift] *)
 
 Theorem shift_preserves_valid_1 : forall lb k k' s,
   valid k s -> valid (k + k') (shift lb k' s).
@@ -418,11 +415,10 @@ Proof. intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
 End IsLvlSet.
 
-
-Module IsBdlLvlSet (T : IsBdlLvlOTWL) (Se : SetOTWithLeibnizInterface T) <: IsBdlLvlOTWL.
+(** ** Bindless Leveled Map Implementation *)
+Module IsBdlLvlSet (T : IsBdlLvlOTWL) (Import Se : SetOTWithLeibnizInterface T) <: IsBdlLvlOTWL.
 
 Include IsLvlSet T Se.
-Import Se.
 
 Lemma shift_valid_refl : forall lb k s,
   valid lb s -> eq (shift lb k s) s.
@@ -440,17 +436,14 @@ Qed.
 
 End IsBdlLvlSet.
 
-
-Module IsLvlFullSet (T : IsLvlFullOTWL) (Se : SetOTWithLeibnizInterface T)
-                                            <: IsLvlFullSetInterface T Se.
+(** ** Leveled Map Implementation with [validb] *)
+Module IsLvlFullSet 
+  (T : IsLvlFullOTWL) (Import Se : SetOTWithLeibnizInterface T) <: IsLvlFullSetInterface T Se.
 
 Include IsLvlSet T Se.
-Import Se.
 
-(** ** Definition *)
 Definition validb (k : nat) (s : t) := (for_all (fun v => T.validb k v) s).
 
-(** ** Valid *)
 #[export]
 Instance proper_valid : Proper (Logic.eq ==> T.eq ==> Logic.eq) T.validb.
 Proof. repeat red; intros; subst. apply T.eq_leibniz in H0; now subst. Qed.
@@ -478,12 +471,11 @@ Proof. repeat red; intros; subst; apply eq_leibniz in H0; now subst. Qed.
 
 End IsLvlFullSet.
 
-
-Module IsBdlLvlFullSet (T : IsBdlLvlFullOTWL) (Se : SetOTWithLeibnizInterface T)
-                                                     <: IsBdlLvlFullSetInterface T Se.
+(** ** Bindless Leveled Map Implementation with [validb] *)
+Module IsBdlLvlFullSet (T : IsBdlLvlFullOTWL) 
+  (Import Se : SetOTWithLeibnizInterface T) <: IsBdlLvlFullSetInterface T Se.
 
 Include IsLvlFullSet T Se.
-Import Se.
 
 Lemma shift_valid_refl : forall lb k s,
   valid lb s -> eq (shift lb k s) s.
@@ -501,39 +493,41 @@ Qed.
 
 End IsBdlLvlFullSet.
 
-(** ** Make - Leveled Set *)
+(** ---- *)
 
-Module MakeIsLvlSet (T : IsLvlOTWL) <: IsLvlOTWL.
+(** * Make - Leveled Set *)
 
-  Module St := SetOTWithLeibniz T.
-  Include IsLvlSet T St.
-  Import St.
+Module MakeLvlSet (T : IsLvlOTWL) <: IsLvlOTWL.
 
-End MakeIsLvlSet.
+Module St := SetOTWithLeibniz T.
+Include IsLvlSet T St.
+Import St.
 
-
-Module MakeIsBdlLvlSet (T : IsBdlLvlOTWL) <: IsBdlLvlOTWL.
-
-  Module St := SetOTWithLeibniz T.
-  Include IsBdlLvlSet T St.
-  Import St.
-
-End MakeIsBdlLvlSet.
+End MakeLvlSet.
 
 
-Module MakeIsLvlFullSet (T : IsLvlFullOTWL) <: IsLvlFullOTWL.
+Module MakeBdlLvlSet (T : IsBdlLvlOTWL) <: IsBdlLvlOTWL.
 
-  Module St := SetOTWithLeibniz T.
-  Include IsLvlFullSet T St.
-  Import St.
+Module St := SetOTWithLeibniz T.
+Include IsBdlLvlSet T St.
+Import St.
 
-End MakeIsLvlFullSet.
+End MakeBdlLvlSet.
 
 
-Module MakeIsBdlLvlFullSet (T : IsBdlLvlFullOTWL) <: IsBdlLvlFullOTWL.
+Module MakeLvlFullSet (T : IsLvlFullOTWL) <: IsLvlFullOTWL.
 
-  Module St := SetOTWithLeibniz T.
-  Include IsBdlLvlFullSet T St.
-  Import St.
+Module St := SetOTWithLeibniz T.
+Include IsLvlFullSet T St.
+Import St.
 
-End MakeIsBdlLvlFullSet.
+End MakeLvlFullSet.
+
+
+Module MakeBdlLvlFullSet (T : IsBdlLvlFullOTWL) <: IsBdlLvlFullOTWL.
+
+Module St := SetOTWithLeibniz T.
+Include IsBdlLvlFullSet T St.
+Import St.
+
+End MakeBdlLvlFullSet.

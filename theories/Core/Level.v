@@ -38,7 +38,7 @@ Proof. intros; lia. Qed.
 
 End lt.
 
-(** *** Shift *)
+(** *** [shift] property *)
 Section shift.
 
 Variable lb lb' k k' : Lvl.t.
@@ -140,7 +140,7 @@ Qed.
 
 End shift.
 
-(** *** Valid *)
+(** *** [valid] property *)
 
 Lemma validb_valid : forall k t, validb k t = true <-> valid k t. 
 Proof.
@@ -161,6 +161,8 @@ Proof. repeat red; intros; subst; rewrite H0; split; auto. Qed.
 
 Lemma valid_weakening : forall k k' t, (k <= k') -> valid k t -> valid k' t.
 Proof. unfold valid; intros k k' t Hleb Hvt; lia. Qed.
+
+(** *** Interaction property between [valid] and [shift] *)
 
 Lemma shift_preserves_valid : forall k k' t, valid k t -> valid (k + k') (shift k k' t).
 Proof.
