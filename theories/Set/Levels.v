@@ -1,15 +1,15 @@
 From Coq Require Import MSets Lia.
 From DeBrLevel Require Import LevelInterface Level SetLevelInterface SetLevel.
 
-(** * Implementation -- Level Set
+(** * Implementation - Level Set
 
-  When the set of leveled elements is directly a set of levels, we can
-  prove more lemmas because of the correspondence between the levels
-  used by shift and the leveled element.
+  A level set has extra permutation property because of elements of the set can
+  interact with [shift] parameters.
 *)
-Module Levels <: IsBdlLvlFullSetOTWLInterface Level.
+Module Levels <: IsBdlLvlFullOTWL.
 
-  Include IsBdlLvlFullSetOTWLInterface Level.
+  Include MakeIsBdlLvlFullSet Level.
+  Import St.
 
   Lemma shift_permute_1 : forall (t : t) lb k k',
     eq (shift lb k (shift lb k' t)) (shift (lb + k) k' (shift lb k t)).
