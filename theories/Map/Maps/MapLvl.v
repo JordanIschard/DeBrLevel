@@ -2,7 +2,7 @@ From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasse
 From MMaps Require Import MMaps.
 From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface MapK.
 
-(** * Implementation -- Map *)
+(** * Implementation - Map *)
 
 (** ** Map with basic datas and levels as keys *)
 

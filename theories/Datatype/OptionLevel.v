@@ -1,7 +1,7 @@
 From Coq Require Import Orders Lia Bool.Bool Structures.EqualitiesFacts.
 From DeBrLevel Require Import LevelInterface Level.
 
-(** * Implementation -- Option 
+(** * Implementation - Option 
 
   Implementation of a leveled elements embedded in an optional type.
 *)

@@ -3,7 +3,7 @@ From MMaps Require Import MMaps.
 From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface.
 
 
-(** * Implementation -- Map *)
+(** * Implementation - Map *)
 
 (** ** Map with leveled datas and leveled keys *)
 

@@ -1,7 +1,7 @@
 From Coq Require Import Structures.Equalities.
 From DeBrLevel Require Import Level LevelInterface MapExtInterface. 
 
-(** * Interfaces -- Map Level with datas as equality types
+(** * Interfaces - Map Level with datas as equality types
 
   Based on the overlay [MapExt] we defined interfaces for maps with [shift] and [valid].
   The [shift] function is applied on all leveled elements (keys and/or data), and a map is 

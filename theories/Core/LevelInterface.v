@@ -1,7 +1,7 @@
 From Coq Require MSets Structures.Equalities Structures.Orders.
 Import Structures.Equalities Structures.Orders.
 
-(** * Interfaces -- Level 
+(** * Interface - Level 
 
   De-Bruijn has proposed a variation of the lambda calculus which instanciates variables
   in a determinisc way. It defines two measures: the distance and the level. The distance,
@@ -12,7 +12,7 @@ Import Structures.Equalities Structures.Orders.
   For instance, λx.(λy.(x y) x) is equal to λ.(λ.(1 0) 0) with distances and λ.(λ.(0 1) 0) 
   with levels.
 
-  This kind of representations are extremely basic and can be used in different context as
+  This kind of representations are extremely simple and can be used in different context as
   well as be embedded in data types or data structures.
 *)
 
