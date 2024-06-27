@@ -261,3 +261,112 @@ Module VarList := Levels.
 
 (** Creating an optional term *)
 Module OptionLambda <: IsLvlETWL := IsLvlOptETWL Lambda.
+
+(** ** More definitions for lambda calculus *)
+
+(** *** Definition of a subsitution *)
+
+Fixpoint substitution (k : Lvl.t) (x : L.t) (v e: Lambda.t) :=
+  match e with
+    | Lambda.tm_var y => if (L.eqb x y) then v else ⟨y⟩
+    | ⟨e1 e2⟩  => tm_app (substitution k x v e1) (substitution k x v e2)
+    | ⟨(\,e1)⟩ => tm_abs (substitution k x ([⧐ k ~ 1] v) e1)
+  end.
+
+Notation "'[' x ':=' v '~' k ']' t" := (substitution k x v t) (in custom lc at level 30, 
+                                                      t custom lc at level 40, right associativity).
+
+(** *** Definition of a small operational semantics *)
+
+Reserved Notation "k '⊨' t '⟼' t1" (at level 57, t custom lc, 
+                                                   t1 custom lc, no associativity).
+
+Inductive sos : Lvl.t -> Lambda.t -> Lambda.t -> Prop :=
+  | sos_beta : forall k e1 e2,
+                      (*--------------------------------------*)
+                         k ⊨ ((\,e1) e2) ⟼ [k := e2 ~ k] e1
+
+  | sos_app_l : forall k e1 e1' e,
+                             k ⊨ e1 ⟼ e1' ->
+                      (*---------------------------*)
+                           k ⊨ (e1 e) ⟼ (e1' e)
+  | sos_app_r : forall k e2 e2' e,
+                             k ⊨ e2 ⟼ e2' ->
+                      (*---------------------------*)
+                           k ⊨ (e e2) ⟼ (e e2')
+  | sos_abs : forall k e e',
+                            (S k) ⊨ e ⟼ e' -> 
+                      (*---------------------------*)
+                           k ⊨ (\,e) ⟼ (\,e')
+where "k '⊨' e '⟼' e1" := (sos k e e1)
+.
+
+(** *** Definition of free variables *)
+
+Inductive In : L.t -> Lambda.t -> Prop :=
+  | In_var: forall (x : L.t), 
+                (*------------*)
+                    In x ⟨x⟩
+  | In_abs: forall (x : L.t) (e : Lambda.t), 
+                     In x e -> 
+                (*---------------*)
+                    In x ⟨\,e⟩
+  | In_app_l: forall (x : L.t) (e1 e2 : Lambda.t), 
+                     In x e1 -> 
+                (*---------------*)    
+                   In x ⟨e1 e2⟩
+  | In_app_r: forall (x : L.t) (e1 e2 : Lambda.t), 
+                    In x e2 -> 
+                (*--------------*)    
+                   In x ⟨e1 e2⟩
+.
+
+(** 
+  If x is greater or equal to k then it cannot be in e because of the validity property. 
+*)
+Definition FV (k : Lvl.t) (x : L.t) (e : Lambda.t) := k ⊢ e -> In x e /\ x < k.
+
+Notation "'FV(' r ',' t ')' ⊣ k" := (FV k r t) (at level 40, t custom lc).
+
+Definition closed (k : Lvl.t) (e : Lambda.t) := forall (x : L.t), ~ (FV(x,e) ⊣ k).
+
+
+
+Lemma subsitution_preserves_valid_gen: forall k k' lb x v e,
+  k >= k' -> k' >= lb -> k ⊢ e -> k' ⊢ v -> k ⊢ ⟨[x := v ~ lb] e⟩.
+Proof.
+  intros k k' lb x v e; revert k k' x v.
+  induction e as [y | |]; intros k k' x v Hle Hle' Hve Hvv.
+  (* variable *)
+  - simpl. 
+    destruct (L.eqb_spec x y) as [Heq | Hneq]; subst.
+    -- apply (valid_weakening k' k _); assumption.
+    -- exact Hve.
+  (* application *)
+  - simpl. 
+    inversion Hve; subst; clear Hve; fold valid in *.
+    rename H2 into Hve1; rename H3 into Hve2.
+    constructor; fold valid.
+    -- apply (IHe1 k k' x v Hle Hle' Hve1 Hvv). 
+    -- apply (IHe2 k k' x v Hle Hle' Hve2 Hvv). 
+  (* abstraction *)
+  - simpl.
+    inversion Hve; subst; clear Hve; fold valid in *.
+    rename H1 into Hve.
+    constructor; fold valid.
+    apply (IHe (S k) (S k') x ([⧐ lb ~ 1] v)).
+    -- lia.
+    -- lia.
+    -- exact Hve.
+    -- replace (S k') with (k' + 1) by lia.
+       apply (shift_preserves_valid_1 lb k' 1 v Hvv).
+Qed.
+
+Lemma subsitution_preserves_valid: forall k x v e,
+  k ⊢ e -> k ⊢ v -> k ⊢ ⟨[x := v ~ k] e⟩.
+Proof.
+  intros k x v e Hve Hvv.
+  assert (Heq: k >= k) by lia.
+  apply (subsitution_preserves_valid_gen k k k x v e Heq Heq Hve Hvv).
+Qed.
+
