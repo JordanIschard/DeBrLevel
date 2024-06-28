@@ -1,5 +1,6 @@
 From DeBrLevel Require Import LevelInterface Level MapLevel Levels OptionLevel.
-From Coq Require Import Lia Classes.Equivalence Classes.Morphisms.
+From Coq Require Import Lia Classes.Equivalence Classes.Morphisms 
+                        Logic.Classical_Pred_Type Logic.Classical_Prop.
 
 (** * Test - Lambda *)
 
@@ -254,7 +255,7 @@ Proof.
 Qed.
 
 (** Creating a map between variables and terms *)
-Module Context := MapLvlD.MakeLvlMapWLLVL Lambda.
+Module Context := MapLvlD.MakeLvlMapLVLD Lambda.
 
 (** Creating a list of variables *)
 Module VarList := Levels.
@@ -369,4 +370,3 @@ Proof.
   assert (Heq: k >= k) by lia.
   apply (subsitution_preserves_valid_gen k k k x v e Heq Heq Hve Hvv).
 Qed.
-

@@ -48,14 +48,14 @@ Qed.
 Lemma valid_empty_spec : valid lb empty.
 Proof. intros; unfold valid,For_all; intros; inversion H. Qed.
 
-Lemma valid_union_spec : valid lb (union s s') <-> valid lb s /\ valid lb s'.
+Lemma valid_union_iff : valid lb (union s s') <-> valid lb s /\ valid lb s'.
 Proof.
   split; intros; unfold valid,For_all in *.
   - split; intros; apply H; rewrite union_spec; auto.
   - intros; destruct H; rewrite union_spec in *; destruct H0; auto.
 Qed.
 
-Lemma valid_singleton_spec : valid lb (singleton v) <-> T.valid lb v.
+Lemma valid_singleton_iff : valid lb (singleton v) <-> T.valid lb v.
 Proof.
   split; intros; unfold valid,For_all in *.
   - apply H; now rewrite singleton_spec.
@@ -112,7 +112,7 @@ Lemma shift_add_in_spec :
   In v s -> shift lb k (add v s) = (shift lb k s).
 Proof. intros; unfold shift; now apply map_add_in_spec. Qed.
 
-Lemma shift_in_spec :
+Lemma shift_in_iff :
   In v s <-> In (T.shift lb k v) (shift lb k s).
 Proof.
   unfold shift; induction s using set_induction.
@@ -132,7 +132,7 @@ Proof.
   intros; destruct (In_dec v s).
   - rewrite shift_add_in_spec; auto. apply eq_leibniz; rewrite add_equal.
     -- reflexivity.
-    -- now apply shift_in_spec.
+    -- now apply shift_in_iff.
   - now  apply shift_add_notin_spec.
 Qed.
 
@@ -150,11 +150,11 @@ Proof.
       exists r'; split; auto. rewrite map_add_notin_spec; auto; rewrite add_spec; now right.
 Qed. 
 
-Lemma shift_notin_spec : ~ In v s <-> ~ In (T.shift lb k v) (shift lb k s).
+Lemma shift_notin_iff : ~ In v s <-> ~ In (T.shift lb k v) (shift lb k s).
 Proof.
   intros; split; unfold not; intros; apply H.
-  - now rewrite <- shift_in_spec in H0.
-  - now rewrite <- shift_in_spec.
+  - now rewrite <- shift_in_iff in H0.
+  - now rewrite <- shift_in_iff.
 Qed.
 
 End shift.
@@ -170,23 +170,23 @@ Proof.
     -- rewrite remove_spec in H0; destruct H0. inversion H0.
     -- apply shift_in_e_spec in H0.
         destruct H0. destruct H0.
-        apply shift_in_spec in H1. rewrite remove_spec in H1; destruct H1; inversion H1.
+        apply shift_in_iff in H1. rewrite remove_spec in H1; destruct H1; inversion H1.
   
   - apply Add_inv in H0; subst. apply eq_leibniz; split; intros.
     -- apply shift_in_e_spec in H0. destruct H0; destruct H0.
-        apply shift_in_spec in H1. apply remove_spec in H1 as [H1 H1'].
+        apply shift_in_iff in H1. apply remove_spec in H1 as [H1 H1'].
         rewrite remove_spec; split; subst.
-        + now apply shift_in_spec.
+        + now apply shift_in_iff.
         + intro; apply H1'. eapply T.shift_eq_iff; eauto.
     -- apply remove_spec in H0 as [H0 H0']. rewrite shift_add_notin_spec in H0; auto.
         apply add_spec in H0; destruct H0; subst.
-        + apply T.eq_leibniz in H0; subst; apply shift_in_spec. apply remove_spec; split.
+        + apply T.eq_leibniz in H0; subst; apply shift_in_iff. apply remove_spec; split.
           ++ apply add_spec; now left.
           ++ intro; apply H0'; subst; auto; apply T.eq_leibniz in H0;
             subst; reflexivity.
         + apply shift_in_e_spec in H0; destruct H0 as [y [Heq HIn]]; subst.
-          apply shift_in_spec. rewrite remove_spec; split.
-          ++ apply add_spec; right; now apply shift_in_spec in HIn.
+          apply shift_in_iff. rewrite remove_spec; split.
+          ++ apply add_spec; right; now apply shift_in_iff in HIn.
           ++ intro; apply H0'; apply T.eq_leibniz in H0; now subst.
 Qed.
 
@@ -216,7 +216,7 @@ Proof.
         rewrite shift_add_notin_spec in Heq; auto. apply eq_leibniz in Heq.
         apply H0 in Heq as Heq'. apply add_remove in Heq' as Htmp.
         apply eq_leibniz in Htmp. rewrite <- Htmp in Heq; clear Htmp.
-        rewrite <- shift_in_spec in Heq'. apply add_remove in Heq' as Htmp.
+        rewrite <- shift_in_iff in Heq'. apply add_remove in Heq' as Htmp.
         apply eq_leibniz in Htmp. rewrite <- Htmp; clear Htmp.
 
         assert (((add x s1) = (add x (remove x s''))) -> 
@@ -225,7 +225,7 @@ Proof.
         apply H1; clear H1. f_equal. apply eq_leibniz; eapply IHs1.
         rewrite <- add_eq_leibniz in Heq; eauto.
         * rewrite Heq. now rewrite shift_remove_spec.
-        * now apply shift_notin_spec.
+        * now apply shift_notin_iff.
         * rewrite remove_spec; intro. destruct H1; auto.
           apply H2; reflexivity.
 Qed.
@@ -244,13 +244,13 @@ Proof.
     destruct (In_dec x s').
     -- rewrite inter_in_add_spec; auto. rewrite map_add_notin_spec.
       + symmetry; rewrite map_add_notin_spec; auto.
-        rewrite (shift_in_spec lb k) in i.
+        rewrite (shift_in_iff lb k) in i.
         rewrite inter_in_add_spec; auto.
         unfold shift in *. now rewrite IHs1.
       + unfold not; intros; rewrite inter_spec in H0; destruct H0; contradiction.
 
     -- rewrite inter_notin_add_spec; auto. rewrite map_add_notin_spec; auto.
-      rewrite (shift_notin_spec lb k) in n.
+      rewrite (shift_notin_iff lb k) in n.
       rewrite inter_notin_add_spec; auto.
       unfold shift in *. now rewrite IHs1.
 Qed.
@@ -282,7 +282,7 @@ Proof.
             * rewrite H0; split.
               ** unfold shift; rewrite map_add_notin_spec; auto.
                 rewrite add_spec; left; reflexivity.
-              ** now apply shift_notin_spec.
+              ** now apply shift_notin_iff.
 
             * rewrite IHs1 in *; rewrite diff_spec in H0; destruct H0.
               split; auto. unfold shift; rewrite map_add_notin_spec; auto.
@@ -343,7 +343,7 @@ Proof.
       + right; unfold shift in IHs1. now rewrite <- IHs1.
       + left; rewrite H0; now rewrite T.shift_trans.
       + right. unfold shift in IHs1. now rewrite IHs1.
-    -- rewrite shift_notin_spec in H; eauto.
+    -- rewrite shift_notin_iff in H; eauto.
 Qed.
 
 Lemma shift_permute : forall lb k k' s,
@@ -352,7 +352,7 @@ Proof.
   intros lb k k' s; induction s using set_induction; unfold shift.
   - repeat rewrite map_Empty_spec; auto; reflexivity.
   - apply Add_inv in H0; subst; repeat rewrite map_add_notin_spec; auto;
-    try (rewrite shift_notin_spec in H; now eauto).
+    try (rewrite shift_notin_iff in H; now eauto).
     split; intros; rewrite add_spec in *; destruct H0.
     -- left; rewrite H0; apply T.shift_permute.
     -- right; unfold shift in *; now rewrite <- IHs1.
@@ -367,7 +367,7 @@ Proof.
   - unfold shift; repeat rewrite map_Empty_spec; auto. reflexivity.
   - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; eauto.
     -- rewrite T.shift_unfold; rewrite IHt1; reflexivity.
-    -- now apply shift_notin_spec.
+    -- now apply shift_notin_iff.
 Qed.
 
 Lemma shift_unfold_1 : forall k k' k'' t,
@@ -378,7 +378,7 @@ Proof.
   - unfold shift; repeat rewrite map_Empty_spec; auto. reflexivity.
   - apply Add_inv in H0; subst. repeat rewrite shift_add_notin_spec; eauto.
     -- rewrite T.shift_unfold_1; auto; rewrite IHt1; auto; reflexivity.
-    -- now apply shift_notin_spec.
+    -- now apply shift_notin_iff.
 Qed.
 
 (** *** Interaction property between [valid] and [shift] *)
@@ -388,7 +388,7 @@ Theorem shift_preserves_valid_1 : forall lb k k' s,
 Proof.
   unfold valid,For_all in *; intros.
   apply shift_in_e_spec in H0; destruct H0 as [y [Heq HIn]]; subst.
-  apply T.shift_preserves_valid_1; apply H; now rewrite <- shift_in_spec in HIn.
+  apply T.shift_preserves_valid_1; apply H; now rewrite <- shift_in_iff in HIn.
 Qed.
 
 Theorem shift_preserves_valid : forall k k' s,
@@ -405,7 +405,7 @@ Proof.
   unfold valid,For_all in *; intros. apply shift_in_e_spec in H5. 
   destruct H5 as [y [Heq HIn]]; subst.
   apply T.shift_preserves_valid_gen with (lb := lb); auto.
-  apply H4. now rewrite <- shift_in_spec in HIn.
+  apply H4. now rewrite <- shift_in_iff in HIn.
 Qed.
 
 Lemma shift_preserves_valid_2 : forall lb lb' t,

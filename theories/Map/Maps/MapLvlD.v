@@ -2,18 +2,15 @@ From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasse
 From MMaps Require Import MMaps.
 From DeBrLevel Require Import Level LevelInterface MapExtInterface MapExt MapLevelInterface MapKD.
 
-(** * Implementation - Map *)
+(** * Implementation - Map - [LevelK/LvlD] *)
 
-(** ** Map with leveled datas and levels as keys *)
+(** ** Leveled Map Implementation *)
 
-(** *** Map implementation with minimal constraints *)
+Module IsLvlMapLVLD
+  (Data : IsLvlETWL) (M : Interface.S Level) 
+  (MO : MapLVLInterface Data M) <: IsLvlMapLVLDInterface Data M MO.
 
-Module IsLvlMapWLLVL (Data : IsLvlETWL) 
-                                (M : Interface.S Level)
-                                (MO : MapLVLInterface Data M) 
-                                <: IsLvlMapWLLVLInterface Data M MO.
-
-Include IsLvlMapWL Level Data M MO.
+Include IsLvlMapKD Level Data M MO.
 Import MO OP.P.
 
 Lemma shift_new_notin_spec : forall lb k t,
@@ -59,7 +56,7 @@ Proof.
       apply new_key_in_spec in H2; lia.
     }
     rewrite H2. eapply max_key_add_spec_4; auto.
-    rewrite <- H2; now apply shift_notin_spec.
+    rewrite <- H2; now apply shift_notin_iff.
 Qed.
 
 Lemma shift_new_spec : forall lb k t,
@@ -76,15 +73,14 @@ Proof.
     -- f_equal; now apply shift_max_spec.
 Qed.  
 
-End IsLvlMapWLLVL.
+End IsLvlMapLVLD.
 
-(** *** Map implementation fully constrained *)
-Module IsBdlLvlMapWLLVL (Data : IsBdlLvlETWL) 
-                                    (M : Interface.S Level) 
-                                    (MO : MapLVLInterface Data M) 
-                                        <: IsBdlLvlMapWLLVLInterface Data M MO.
+(** ** Bindless Leveled Map Implementation *)
+Module IsBdlLvlMapLVLD 
+  (Data : IsBdlLvlETWL) (M : Interface.S Level) 
+  (MO : MapLVLInterface Data M) <: IsBdlLvlMapLVLDInterface Data M MO.
 
-Include IsLvlMapWLLVL Data M MO.
+Include IsLvlMapLVLD Data M MO.
 Import MO OP.P.
 
 Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
@@ -93,7 +89,7 @@ Proof.
   - now apply shift_Empty_spec.
   - apply shift_Add_spec with (lb := lb) (k := k) in H1 as H1'; auto.
     unfold Add in *.
-    rewrite H1'. rewrite <- valid_Add_spec in H; eauto.
+    rewrite H1'. rewrite <- valid_Add_iff in H; eauto.
     destruct H as [Hvr [Hve Hvt]]. apply IHt0_1 in Hvt. rewrite H1.
     rewrite Hvt. 
     apply Level.shift_valid_refl with (k := k) in Hvr; rewrite Hvr.
@@ -101,26 +97,26 @@ Proof.
     now rewrite Hve.
 Qed.
     
-End IsBdlLvlMapWLLVL.
+End IsBdlLvlMapLVLD.
 
 
 (** *** Map Make *)
 
-Module MakeLvlMapWLLVL (Data : IsLvlETWL) <: IsLvlET.
+Module MakeLvlMapLVLD (Data : IsLvlETWL) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Level.
   Module Ext := MapETLVL Data Raw.
-  Include IsLvlMapWLLVL Data Raw Ext.
+  Include IsLvlMapLVLD Data Raw Ext.
   Include OP.P.
 
-End MakeLvlMapWLLVL.
+End MakeLvlMapLVLD.
 
 
-Module MakeBdlLvlMapWLLVL (Data : IsBdlLvlETWL) <: IsBdlLvlET.
+Module MakeBdlLvlMapLVLD (Data : IsBdlLvlETWL) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Level.
   Module Ext := MapETLVL Data Raw.
-  Include IsBdlLvlMapWLLVL Data Raw Ext.
+  Include IsBdlLvlMapLVLD Data Raw Ext.
   Include OP.P.
 
-End MakeBdlLvlMapWLLVL.
+End MakeBdlLvlMapLVLD.

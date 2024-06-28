@@ -43,8 +43,8 @@ Variable s s' : t.
 Parameter valid_unfold : valid lb s <-> (For_all (T.valid lb) s).
 Parameter valid_add_spec : valid lb (add v s) -> T.valid lb v /\ valid lb s.
 Parameter valid_empty_spec : valid lb empty.
-Parameter valid_union_spec : valid lb (union s s') <-> valid lb s /\ valid lb s'.
-Parameter valid_singleton_spec : valid lb (singleton v) <-> T.valid lb v.
+Parameter valid_union_iff : valid lb (union s s') <-> valid lb s /\ valid lb s'.
+Parameter valid_singleton_iff : valid lb (singleton v) <-> T.valid lb v.
 Parameter valid_in_spec : valid lb s -> In v s -> T.valid lb v.
 
 End valid.
@@ -69,11 +69,11 @@ Parameter shift_add_in_spec : In v s -> shift lb k (add v s) = (shift lb k s).
 Parameter shift_add_spec : shift lb k (add v s) = add (T.shift lb k v) (shift lb k s).
 Parameter shift_remove_spec : shift lb k (remove v s) = remove (T.shift lb k v)(shift lb k s).
 
-Parameter shift_in_spec : In v s <-> In (T.shift lb k v) (shift lb k s).
+Parameter shift_in_iff : In v s <-> In (T.shift lb k v) (shift lb k s).
 Parameter shift_in_e_spec :
   In v (shift lb k s) -> 
   exists v', v = (T.shift lb k v') /\ In (T.shift lb k v') (shift lb k s).
-Parameter shift_notin_spec : ~ In v s <-> ~ In (T.shift lb k v) (shift lb k s).
+Parameter shift_notin_iff : ~ In v s <-> ~ In (T.shift lb k v) (shift lb k s).
 
 End shift.
 

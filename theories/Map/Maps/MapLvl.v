@@ -2,18 +2,15 @@ From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasse
 From MMaps Require Import MMaps.
 From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface MapK.
 
-(** * Implementation - Map *)
+(** * Implementation - Map - [LevelK/ETD] *)
 
-(** ** Map with basic datas and levels as keys *)
+(** ** Leveled Map Implementation *)
 
-(** *** Map implementation with minimal constraints *)
+Module IsLvlMapLVL 
+  (Data : EqualityType) (M : Interface.S Level) 
+  (MO : MapLVLInterface Data M)  <: IsLvlMapLVLInterface Data M MO.
 
-Module IsLvlMapLVL (Data : EqualityType) 
-                          (M : Interface.S Level)
-                          (MO : MapLVLInterface Data M) 
-                          <: IsLvlMapLVLInterface Data M MO.
-
-Include IsLvlMap Level Data M MO.
+Include IsLvlMapK Level Data M MO.
 Import MO OP.P.
 
 Lemma shift_new_notin_spec : forall lb k t,
@@ -58,7 +55,7 @@ Proof.
       apply new_key_in_spec in H2; lia.
     }
     rewrite H2. eapply max_key_add_spec_4; auto.
-    rewrite <- H2; now apply shift_notin_spec.
+    rewrite <- H2; now apply shift_notin_iff.
 Qed.
 
 Lemma shift_new_spec : forall lb k t,
@@ -77,11 +74,10 @@ Qed.
 
 End IsLvlMapLVL.
 
-(** *** Map implementation fully constrained *)
-Module IsBdlLvlMapLVL (Data : EqualityType) 
-                                (M : Interface.S Level) 
-                                (MO : MapLVLInterface Data M) 
-                                   <: IsBdlLvlMapLVLInterface Data M MO.
+(** ** Bindless Leveled Map Implementation *)
+Module IsBdlLvlMapLVL 
+  (Data : EqualityType) (M : Interface.S Level) 
+  (MO : MapLVLInterface Data M) <: IsBdlLvlMapLVLInterface Data M MO.
 
 Include IsLvlMapLVL Data M MO.
 Import MO OP.P.
@@ -98,8 +94,9 @@ Qed.
     
 End IsBdlLvlMapLVL.
 
+(** ---- *)
 
-(** *** Map Make *)
+(** * Make - Leveled Map [LevelK/ETD] *)
 
 Module MakeLvlMapLVL (Data : EqualityType) <: IsLvlET.
   

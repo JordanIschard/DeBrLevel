@@ -20,8 +20,8 @@ Proof.
     -- split; intros; rewrite add_spec in *; destruct H0;
         try (left; rewrite H0; now rewrite Level.shift_permute_1);
         right; now rewrite IHt1 in *.
-    -- rewrite shift_notin_spec in H; eauto.
-    -- rewrite shift_notin_spec in H; eauto.
+    -- rewrite shift_notin_iff in H; eauto.
+    -- rewrite shift_notin_iff in H; eauto.
 Qed.
 
 Lemma shift_permute_2 : forall (t : t) lb lb' k k',
@@ -35,8 +35,8 @@ Proof.
         + right. rewrite IHt1 in H0; auto.
         + subst; left; symmetry; now apply Level.shift_permute_2.
         + right. rewrite <- IHt1 in H0; auto.
-    -- rewrite shift_notin_spec in H; eauto.
-    -- rewrite shift_notin_spec in H; eauto.
+    -- rewrite shift_notin_iff in H; eauto.
+    -- rewrite shift_notin_iff in H; eauto.
 Qed.
 
 End Levels.
