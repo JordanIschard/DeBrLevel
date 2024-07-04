@@ -269,7 +269,11 @@ Module OptionLambda <: IsLvlETWL := IsLvlOptETWL Lambda.
 
 Fixpoint substitution (k : Lvl.t) (x : L.t) (v e: Lambda.t) :=
   match e with
-    | Lambda.tm_var y => if (L.eqb x y) then v else ⟨y⟩
+    | Lambda.tm_var y =>  match (L.compare y x) with
+                            | Eq => v
+                            | Gt => Lambda.tm_var (y - 1)
+                            | Lt => ⟨y⟩
+                          end
     | ⟨e1 e2⟩  => tm_app (substitution k x v e1) (substitution k x v e2)
     | ⟨(\,e1)⟩ => tm_abs (substitution k x ([⧐ k ~ 1] v) e1)
   end.
@@ -332,7 +336,7 @@ Notation "'FV(' r ',' t ')' ⊣ k" := (FV k r t) (at level 40, t custom lc).
 Definition closed (k : Lvl.t) (e : Lambda.t) := forall (x : L.t), ~ (FV(x,e) ⊣ k).
 
 
-
+(*
 Lemma subsitution_preserves_valid_gen: forall k k' lb x v e,
   k >= k' -> k' >= lb -> k ⊢ e -> k' ⊢ v -> k ⊢ ⟨[x := v ~ lb] e⟩.
 Proof.
@@ -370,3 +374,4 @@ Proof.
   assert (Heq: k >= k) by lia.
   apply (subsitution_preserves_valid_gen k k k x v e Heq Heq Hve Hvv).
 Qed.
+*)
