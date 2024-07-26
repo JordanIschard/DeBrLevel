@@ -45,25 +45,25 @@ The following example have the following tree:
 
 --------------------------------------------------------------
 
-  fun y -> (y  ((fun x -> x z) (fun y -> y)))      0
+  fun y -> (y  ((fun x -> x z) (fun y -> y)))      1
                         |
 --------------------------------------------------------------
                         |
       (y  ((fun x -> x z) (fun y -> y)))           
            /               \                      
           |                 |
-          y        ((fun x -> x z) (fun y -> y))   1
+          y        ((fun x -> x z) (fun y -> y))   2
                      /                   \
                     |                     |
               (fun x -> x z)         (fun y -> y)  
 --------------------------------------------------------------
                     |                     |
                    x z                    y
-                  /   \                             2
+                  /   \                             3
                  |     |
                  x     z
 *)
-fun y -> (y  ((fun x -> x y) (fun y -> y)))
+fun y -> (y  ((fun x -> x z) (fun y -> y)))
 ```
 
 Now, bind variable would be the level of the abstraction and consequently the abstraction does not need to explicit its bind variable anymore. Thus, the following example will be written as follows:
