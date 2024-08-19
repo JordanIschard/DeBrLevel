@@ -2,679 +2,698 @@ From Coq Require Import Lia Arith.PeanoNat Classical_Prop Classes.RelationClasse
 From DeBrLevel Require Import LevelInterface Level MapExtInterface MapExt MapLevelInterface.
 From MMaps Require Import MMaps.
 
+(** * Implementation - Map - [LvlK/LvlD] *)
 
-(** * Implementation -- Map *)
-
-(** ** Map with leveled keys and datas -- Implementation *)
-
-(** *** Map implementation with minimal constraints *)
-Module IsLvlMapWL  (Key : IsLvlOTWL) (Data : IsLvlETWL) 
-                   (M : Interface.S Key) (MO : MapInterface Key Data M) 
-                            <: IsLvlMapWLInterface Key Data M MO.
+(** ** Leveled Map Implementation *)
+Module IsLvlMapKD  
+  (Key : IsLvlOTWL) (Data : IsLvlETWL) 
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsLvlMapKDInterface Key Data M MO.
 
 Import MO OP.P.
 Include MO.
 
-(** **** Definition *)
+(** *** Definition *)
 
-Definition shift (lb : Lvl.t) (k : Lvl.t) (m : t) :=
-  M.fold (fun (key : M.key) (v : Data.t) (acc : t) => 
-              M.add (Key.shift lb k key) (Data.shift lb k v) acc) m M.empty.
+Definition shift_func (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m : t) :=
+  M.add (Key.shift lb k key) (Data.shift lb k v) m.
 
-Definition valid (lb : Lvl.t) (m : t) :=
-  M.fold (fun (key : M.key) (v : Data.t) (acc : Prop) => 
-              Key.valid lb key /\ Data.valid lb v /\ acc) m True.
+Definition valid_func (lb : Lvl.t) (key : Key.t) (v : Data.t) (P : Prop) :=
+  (Key.valid lb key) /\ (Data.valid lb v) /\ P.
+
+Definition shift (lb k : Lvl.t) (m : t) := M.fold (shift_func lb k) m M.empty.
+
+Definition valid (lb : Lvl.t) (m : t) := M.fold (valid_func lb) m True.
 
 
-(** **** Some facts *)
+(** *** Facts *)
 
-Fact iff_equiv : Equivalence iff.
+#[export] Instance iff_equiv : Equivalence iff := _.
+#[export] Instance logic_eq_equiv : forall A, Equivalence (@Logic.eq A) := _.
+
+Fact valid_diamond (lb : Lvl.t) : Diamond iff (valid_func lb).
 Proof.
-  split. 
-  -- unfold Reflexive; intros; reflexivity.
-  -- unfold Symmetric; intros; now symmetry.
-  -- unfold Transitive; intros; now transitivity y.
+  intros k k' v v' P P' P'' HneqK HvfP HvfP'.
+  split; intros [HvK [HvD HvP]].
+  - rewrite <- HvfP' in HvP.
+    destruct HvP as [HvK' [HvD' HvP]].
+    repeat split; auto.
+    rewrite <- HvfP.
+    now repeat split.
+  - rewrite <- HvfP in HvP.
+    destruct HvP as [HvK' [HvD' HvP]].
+    repeat split; auto.
+    rewrite <- HvfP'.
+    now repeat split.
 Qed.
 
-Fact logic_eq_equiv : forall A, Equivalence (@Logic.eq A).
-Proof. intros; split; auto; unfold Transitive; intros; subst; auto. Qed.
-
-Fact valid_diamond : forall lb, Diamond iff
-  (fun (key0 : Key.t) (v0 : Data.t) 
-        (acc : Prop) => Key.valid lb key0 /\ Data.valid lb v0 /\ acc).
+#[export] Instance valid_proper : 
+  Proper (Logic.eq ==> Key.eq ==> Logic.eq ==> iff ==> iff) valid_func.
 Proof.
-  unfold Diamond; intros; split; intros [bn [iu ]].
-  -- rewrite <- H1 in H2; destruct H2; destruct H3.
-    split; auto; split; auto; rewrite <- H0; split; auto; split; auto.
-  -- rewrite <- H0 in H2; destruct H2; destruct H3.
-    split; auto; split; auto; rewrite <- H1; split; auto; split; auto.
+  intros lb' lb Heqlb k' k HeqK v' v HeqD P P' HeqP; subst.
+  split; intros [Hvk [Hvd HvP]]. 
+  - repeat split; auto.
+    -- eapply Key.valid_eq; eauto. 
+       + reflexivity.
+       + now rewrite HeqK.
+    -- now rewrite <- HeqP.
+  - repeat split; auto.
+    -- eapply Key.valid_eq; eauto; reflexivity. 
+    -- now rewrite HeqP.
 Qed.
 
-Fact valid_proper : forall lb, Proper (Key.eq ==> Logic.eq ==> iff ==> iff)
-  (fun (key0 : Key.t) (v0 : Data.t) 
-        (acc : Prop) => Key.valid lb key0 /\ Data.valid lb v0 /\ acc).
+#[export] Instance shift_proper :
+  Proper (Logic.eq ==> Logic.eq ==> Key.eq ==> Logic.eq ==> eq ==> eq) shift_func.
 Proof.
-  split; intros [a [b ]]; subst; split; auto; apply Key.eq_leibniz in H;
-  subst; auto; split; auto; now rewrite <- H1 in *.
+  intros lb' lb Heqlb k' k Heqk ke ke' HeqK v' v Heqv m m' Heqm; subst.
+  unfold shift_func.
+  rewrite Heqm.
+  now apply Key.eq_leibniz in HeqK; subst. 
 Qed.
 
-Fact shift_proper : forall lb k,
-  Proper (Key.eq ==> Logic.eq ==> eq ==> eq)
-  (fun (key0 : Key.t) (v0 : Data.t) 
-        (acc : t) => M.add (Key.shift lb k key0) (Data.shift lb k v0) acc).
-Proof. 
-  repeat red; intros; apply Key.eq_leibniz in H; subst.
-  now rewrite H1.
-Qed.
-
-Fact shift_diamond : forall lb k,
-  Diamond eq (fun (key0 : Key.t) (v0 : Data.t) (acc : t) => M.add (Key.shift lb k key0) 
-            (Data.shift lb k v0) acc).
+Fact shift_diamond (lb k : Lvl.t) : Diamond eq (shift_func lb k).
 Proof.
-  unfold Diamond; intros. rewrite <- H0; rewrite <- H1. 
-  now rewrite add_add_2; try (now rewrite <- Key.shift_eq_iff).
+  intros ke ke' v v' P P' P'' HneqK Heq1 Heq2.
+  unfold shift_func in *.
+  rewrite <- Heq2; rewrite <- Heq1.
+  rewrite add_add_2; try reflexivity.
+  now rewrite <- Key.shift_eq_iff.
 Qed.
 
 
-(** **** Valid *)
+(** *** extra [valid] property *)
 
 #[local] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv valid_diamond valid_proper
 shift_proper shift_diamond : core.
 
-
-Lemma valid_Empty_spec : forall lb m,
-  Empty m -> valid lb m.
+Lemma valid_Empty_spec (lb : Lvl.t) (m : t) : Empty m -> valid lb m.
 Proof.
-  intros; unfold valid; eapply fold_Empty in H; auto. now rewrite H.
+  intro HEmp; unfold valid.
+  rewrite fold_Empty; auto.
 Qed.
 
-Lemma valid_add_notin_spec : forall lb x v m,
-  ~ M.In x m -> valid lb (M.add x v m) <-> Key.valid lb x /\ Data.valid lb v /\ valid lb m.
+Lemma valid_Empty_iff (lb : Lvl.t) (m : t) : Empty m -> valid lb m <-> True.
 Proof.
-  unfold valid in *; split; intros.
-  - rewrite fold_add with (i := True) in H0; eauto.
-  - destruct H0. rewrite fold_add with (i := True); eauto.
+  intro HEmp; unfold valid.
+  rewrite fold_Empty; auto; reflexivity.
 Qed.
 
-Lemma valid_Add_spec : forall lb x v m m',
+Lemma valid_empty_spec (lb : Lvl.t) : valid lb M.empty.
+Proof.
+  unfold valid; rewrite fold_Empty; auto.
+  apply empty_1.
+Qed.
+
+Lemma valid_add_notin_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
+  ~ M.In x m -> 
+  valid lb (M.add x v m) <-> Key.valid lb x /\ Data.valid lb v /\ valid lb m.
+Proof.
+  unfold valid in *; intro HnIn.
+  rewrite fold_add; auto.
+  - reflexivity.
+  - now apply valid_proper.
+Qed.
+
+Lemma valid_Add_iff (lb : Lvl.t) (x : Key.t) (v : Data.t) (m m' : t) :
   ~ M.In x m -> Add x v m m' -> 
   Key.valid lb x /\ Data.valid lb v /\ valid lb m <-> valid lb m'.
 Proof.
   unfold valid in *; split; intros.
   - rewrite fold_Add with (i := True); eauto.
+    now apply valid_proper.
   - rewrite fold_Add with (i := True) in H1; eauto.
+    now apply valid_proper.
 Qed.
 
-Lemma valid_find_spec : forall lb x v m,
-  valid lb m -> M.find x m = Some v -> Key.valid lb x /\ Data.valid lb v.
+#[export] Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
 Proof.
-  intros lb x v m; revert lb x v; induction m using map_induction; intros.
-  - unfold Empty in H; exfalso; apply (H x v); now apply find_2.
-  - apply (valid_Add_spec _ x e m1 m2) in H1 as [Hvr [Hvpt Hv]]; auto.
-    unfold Add in *; rewrite H0 in *. destruct (Key.eq_dec x x0); subst.
-    -- rewrite add_eq_o in H2; auto; inversion H2; subst; clear H2.
-       split; eapply Key.valid_eq in Hvr; eauto; try now symmetry.
-    -- rewrite add_neq_o in H2; auto.
-Qed. 
-
-Lemma valid_in_spec : forall lb x m,
-  valid lb m -> M.In x m -> Key.valid lb x.
-Proof.
-  intros m lb r Hvm HIn; destruct HIn as [v Hfm]; apply find_1 in Hfm.
-  eapply valid_find_spec in Hfm; eauto; destruct Hfm; assumption.
-Qed. 
-
-#[global]
-Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
-Proof.
-  repeat red; split; subst; revert y y0 H0; rename x0 into m;
-  induction m using map_induction; intros.
-  - apply valid_Empty_spec; now rewrite <- H0.
-  - rewrite <- valid_Add_spec in H2; eauto.
-    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec; eauto.
-  
-  - now apply valid_Empty_spec.
-  - rewrite <- valid_Add_spec; eauto.
-    rewrite Add_eq_spec in H0; eauto. rewrite <- valid_Add_spec in H2; eauto.
+  intros lb' lb Heqlb m m' Heqm; subst.
+  revert m' Heqm; induction m using map_induction; intros m' Heqm.
+  - split; intro Hvm.
+    -- apply valid_Empty_spec. 
+       now rewrite <- Heqm.
+    -- now apply valid_Empty_spec. 
+  - split; intro Hvm.
+    -- rewrite <- valid_Add_iff in Hvm; eauto.
+       destruct Hvm as [Hvx [Hve Hvm]].
+       rewrite <- valid_Add_iff; eauto.
+       unfold Add in *; now rewrite H0 in *.
+    -- rewrite <- valid_Add_iff with (v := e) in Hvm; eauto.
+       + destruct Hvm as [Hvx [Hve Hvm]].
+         rewrite <- valid_Add_iff; eauto.
+       + unfold Add in *; now rewrite H0 in *.
 Qed.
 
-Lemma valid_add_in_spec : forall k x m,
-  M.In x m -> valid k m -> exists v, valid k (M.add x v m).
-Proof.
-  intros k x m; revert k x; induction m using map_induction; intros k y HIn Hvm.
-  - unfold Empty in *; exfalso.
-    destruct HIn as [z HM]; now apply (H y z).
-  - rewrite <- valid_Add_spec in Hvm; eauto; destruct Hvm as [Hvx [Hve Hvm]].
-    destruct (Key.eq_dec x y); subst.
-    -- exists e. unfold Add in H0; rewrite H0 in *.
-       apply Key.eq_leibniz in e0; subst. rewrite add_add_1.
-       rewrite valid_add_notin_spec; auto.
-    -- unfold Add in *; rewrite H0 in *. 
-       apply IHm1 with (x := y) in Hvm as [v Hvm].
-       + exists v. rewrite H0. rewrite add_add_2; try (intro c; symmetry in c; contradiction).
-         rewrite valid_add_notin_spec.
-         ++ split; auto.
-         ++ intro Hin; rewrite add_in_iff in Hin; destruct Hin; auto. 
-            symmetry in H1; contradiction.
-       + rewrite add_in_iff in HIn; destruct HIn; auto. contradiction.
-Qed.
-
-Lemma valid_add_spec : forall m x v lb,
+Lemma valid_add_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
   Key.valid lb x /\ Data.valid lb v /\ valid lb m -> valid lb (M.add x v m).
 Proof.
-  intro m; induction m using map_induction; intros x' v lb [Hv [Hv1 Hv2]].
+  induction m using map_induction; intros [HvK [HvD Hvm]].
   - rewrite valid_add_notin_spec; auto.
-    intro i; unfold Empty in H; destruct i; exfalso. now apply (H x' x).
-  - unfold Add in *; rewrite H0 in *. 
-    apply valid_add_notin_spec in Hv2 as [Hv2 [Hv3 Hv4]]; auto.
-    destruct (Key.eq_dec x' x).
-    -- apply Key.eq_leibniz in e0; subst.
-       assert (eq (M.add x v (M.add x e m1)) (M.add x v m1)).
-       { 
-        intro y. destruct (Key.eq_dec y x).
-        - apply Key.eq_leibniz in e0; subst. repeat rewrite add_eq_o; auto; reflexivity.
-        - repeat rewrite add_neq_o; auto; intro c; symmetry in c; contradiction.
-       }
-       rewrite H1; clear H1. rewrite valid_add_notin_spec; auto.
-    -- rewrite add_add_2; auto. rewrite valid_add_notin_spec.
+    rewrite Empty_eq_spec; auto.
+    apply not_in_empty.
+  - unfold Add in *; rewrite H0 in *; clear H0. 
+    apply valid_add_notin_spec in Hvm as [Hvx0 [Hve Hvm]]; auto.
+    destruct (Key.eq_dec x x0) as [Heq | Hneq].
+    -- rewrite Heq in *.
+       rewrite add_shadow.
+       now apply valid_add_notin_spec.
+    -- rewrite add_add_2; auto.
+       apply valid_add_notin_spec.
+       + rewrite add_in_iff.
+         intros [Heq | HIn]; auto.
        + repeat split; auto.
-       + intro. rewrite add_in_iff in H1; destruct H1; contradiction.
+Qed.
+
+Lemma valid_find_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
+  valid lb m -> M.find x m = Some v -> Key.valid lb x /\ Data.valid lb v.
+Proof.
+  induction m using map_induction; intros Hvm Hfm.
+  - rewrite Empty_eq_spec in Hfm; auto.
+    rewrite empty_o in Hfm.
+    inversion Hfm.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    apply valid_add_notin_spec in Hvm as [Hvx0 [Hve Hvm]]; auto.
+    destruct (Key.eq_dec x0 x) as [Heq | Hneq].
+    -- rewrite add_eq_o in Hfm; auto.
+       inversion Hfm; subst; clear Hfm.
+       split; auto.
+       eapply Key.valid_eq; eauto; try reflexivity.
+       now symmetry.
+    -- rewrite add_neq_o in Hfm; auto.
+Qed. 
+
+Lemma valid_in_spec (lb : Lvl.t) (x : Key.t) (m : t) :
+  valid lb m -> M.In x m -> Key.valid lb x.
+Proof.
+  intros Hvm [v Hfm].
+  apply find_1 in Hfm.
+  now apply (valid_find_spec lb x v m Hvm) in Hfm as [Hvx _].
+Qed. 
+
+Lemma valid_add_in_spec (lb : Lvl.t) (x : Key.t) (m : t) :
+  M.In x m -> valid lb m -> exists v, valid lb (M.add x v m).
+Proof.
+  induction m using map_induction; intros HIn Hvm.
+  - exfalso.
+    rewrite Empty_eq_spec in HIn; auto.
+    now apply not_in_empty in HIn.
+  - rewrite <- valid_Add_iff in Hvm; eauto.
+    destruct Hvm as [Hvx0 [Hve Hvm]].
+    unfold Add in *; rewrite H0 in *.
+    apply add_in_iff in HIn as [Heq | HIn].
+    -- rewrite Heq in *.
+       exists e.
+       rewrite H0; rewrite add_shadow.
+       apply valid_add_notin_spec; auto.
+       repeat split; auto.
+       eapply Key.valid_eq; eauto; try reflexivity.
+       now symmetry.
+    -- apply (IHm1 HIn) in Hvm as [v Hvm].
+       destruct (Key.eq_dec x x0) as [Heq | Hneq].
+       + rewrite Heq in *; contradiction.
+       + exists v.
+         rewrite H0.
+         rewrite add_add_2; auto.
+         apply valid_add_notin_spec; auto.
+         rewrite add_in_iff; intros [Heq | HIn1]; contradiction.  
+Qed.
+
+Lemma valid_Add_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m m' : t) :
+  Add x v m m' -> 
+  Key.valid lb x /\ Data.valid lb v /\ valid lb m -> valid lb m'.
+Proof.
+  unfold Add; intros Heq Hv.
+  rewrite Heq.
+  now apply valid_add_spec.
 Qed.
 
 
-(** **** Shift *)
+(** *** extra [shift] property *)
 
 
-Lemma shift_Empty_spec : forall lb k m,
+Lemma shift_Empty_spec (lb k : Lvl.t) (m : t) :
   Empty m -> eq (shift lb k m) m.
-Proof. 
-  intros; unfold shift. eapply fold_Empty with (eqA := eq) (i := M.empty) in H as H'; 
-  eauto. rewrite H'; clear H'; apply is_empty_1 in H as H'. symmetry; 
-  now apply Empty_eq_spec_1.
+Proof.
+  intro HEmp; unfold shift.
+  rewrite fold_Empty with (eqA := eq); auto.
+  symmetry. 
+  now apply Empty_eq_spec. 
 Qed.
 
-Lemma shift_Empty_iff : forall lb k m,
+Lemma shift_Add_spec_1 (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m m' : t) :
+  ~ M.In key m -> Add key v m m' -> 
+  eq (shift lb k m') (M.add (Key.shift lb k key) (Data.shift lb k v) (shift lb k m)).
+Proof.
+  intros HIn HAdd; unfold shift. 
+  rewrite fold_Add with (eqA := eq) (i := M.empty); eauto.
+  - reflexivity.
+  - now apply shift_proper.
+Qed.
+
+Lemma shift_Empty_iff (lb k : Lvl.t) (m : t) :
   Empty m <-> Empty (shift lb k m).
 Proof.
-  split.
-  - intros; unfold shift. eapply fold_Empty with (i := M.empty) (eqA := eq) in H; eauto.
-    rewrite Empty_eq_spec; eauto; apply empty_1.
-  - revert lb k; induction m using map_induction; intros lb k HEmp; auto.
-    unfold Empty in HEmp; exfalso; apply (HEmp (Key.shift lb k x) (Data.shift lb k e)).
-    apply find_2. eapply fold_Add with (eqA := eq) (i := M.empty) in H0; eauto.
-    unfold shift; rewrite H0. now apply add_eq_o.
+  split; intro HEmp.
+  - now rewrite shift_Empty_spec.
+  - revert HEmp; induction m using map_induction; intro HEmp; auto.
+    rewrite shift_Add_spec_1 in HEmp; eauto.
+    exfalso; apply (HEmp (Key.shift lb k x) (Data.shift lb k e)).
+    now apply add_1.
 Qed.
 
-Lemma shift_add_notin_spec : forall lb k x v  (m : t),
+#[export] Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
+Proof.
+  intros lb' lb Heqlb k' k Heqk m m' Heqm; subst.
+  revert m' Heqm; induction m using map_induction; intros.
+  - repeat rewrite shift_Empty_spec; auto.
+    now rewrite <- Heqm.
+  - rewrite shift_Add_spec_1; eauto.
+    symmetry.
+    rewrite shift_Add_spec_1; eauto; try reflexivity.
+    unfold Add in *. 
+    now rewrite <- Heqm.
+Qed.
+
+Lemma shift_add_notin_spec (lb k : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
   ~ M.In x m ->  
   eq (shift lb k (M.add x v m)) 
       (M.add (Key.shift lb k x) (Data.shift lb k v) (shift lb k m)).
 Proof.
-  intros lb k x v m HIn; unfold shift.
-  rewrite fold_add with (eqA := eq) (i := M.empty); now eauto.
+  intro HIn; unfold shift.
+  rewrite fold_add with (eqA := eq) (i := M.empty); eauto; try reflexivity.
+  now apply shift_proper.
 Qed.
 
-Lemma shift_Add_spec : forall lb k key v (m m' : t),
-  ~ M.In key m -> Add key v m m' -> 
-  eq (shift lb k m') (M.add (Key.shift lb k key) (Data.shift lb k v) (shift lb k m)).
-Proof.
-  intros lb k key v m m' HIn HAdd; unfold shift; 
-  rewrite fold_Add with (eqA := eq) (i := M.empty); now eauto.
-Qed.
-
-Lemma shift_Add_spec_1 : forall lb k key v (m m' : t),
+Lemma shift_Add_spec_2 (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m m' : t) :
   ~ M.In key m -> Add key v m m' ->
   Add (Key.shift lb k key) (Data.shift lb k v) (shift lb k m) (shift lb k m').
 Proof.
-  intros. apply shift_Add_spec with (lb := lb) (k := k) in H0; auto.
-Qed.
-  
-Lemma shift_in_spec_1 : forall lb k key (m : t),
-  M.In key m -> M.In (Key.shift lb k key) (shift lb k m).
-Proof.
-  intros lb k key m; induction m using map_induction; intros.
-  - exfalso; unfold Empty,not in *; destruct H0.
-    now apply (H key x).
-  - apply shift_Add_spec with (lb := lb) (k := k) in H0 as H0'; auto.
-    rewrite in_find in *.
-    rewrite H0',H0 in *. rewrite <- in_find in *. rewrite add_in_iff in *.
-    destruct H1.
-    -- subst; left; auto. now rewrite <- Key.shift_eq_iff.
-    -- right; auto.
+  unfold Add; intros HnIn HAdd. 
+  now rewrite shift_Add_spec_1; eauto.
 Qed.
 
-Lemma shift_in_spec_2 : forall lb k key (m : t),
-  M.In (Key.shift lb k key) (shift lb k m) -> M.In key m.
-Proof.
-  intros lb k key m; induction m using map_induction; intros.
-  - exfalso. apply shift_Empty_iff with (lb := lb) (k := k) in H.
-    unfold Empty,not in *; destruct H0.
-    now apply (H (Key.shift lb k key) x).
-  - apply shift_Add_spec with (lb := lb) (k := k) in H0 as H0'; auto.
-    rewrite in_find in *. 
-    rewrite H0',H0 in *. rewrite <- in_find in *. rewrite add_in_iff in *.
-    destruct H1.
-    -- left; now rewrite <- Key.shift_eq_iff in H1.
-    -- right; auto.
-Qed.
-
-Lemma shift_in_spec : forall lb k key (m : t), 
-  M.In key m <-> M.In (Key.shift lb k key) (shift lb k m).
-Proof. split; intros. eapply shift_in_spec_1; eauto. eapply shift_in_spec_2; eauto. Qed.
-
-Lemma shift_notin_spec : forall lb k key (m : t), 
-  ~ M.In key m <-> ~ M.In (Key.shift lb k key) (shift lb k m).
-Proof.
-  unfold not; split; intros; apply H.
-  - rewrite shift_in_spec; eauto.
-  - now rewrite <- shift_in_spec.
-Qed.
-
-Lemma shift_find_spec_1 : forall (m : t) lb k key v, 
-  M.find key m = Some v -> 
-  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v).
-Proof.
-  intros m lb k key; induction m using map_induction; intros.
-  - exfalso. unfold Empty,not in *; apply (H key v). now apply find_2.
-  - apply shift_Add_spec with (lb := lb) (k := k) in H0 as H0'; auto.
-    rewrite in_find in *. 
-    rewrite H0',H0 in *. rewrite <- in_find in *. rewrite add_o in *.
-    destruct (Key.eq_dec x key); subst.
-    -- inversion H1; subst; clear H1. 
-       destruct (Key.eq_dec (Key.shift lb k x) (Key.shift lb k key)); 
-       subst; auto. exfalso; apply n. now rewrite <- Key.shift_eq_iff.
-    -- destruct (Key.eq_dec (Key.shift lb k x) (Key.shift lb k key)); auto.
-       exfalso; apply n; now rewrite <- Key.shift_eq_iff in e0.
-Qed.
-
-Lemma shift_find_e_spec : forall lb k x v m,
-  M.find (Key.shift lb k x) (shift lb k m) = Some v -> 
-  exists v', Data.eq v (Data.shift lb k v').
-Proof.
-  intros lb k x v m; revert lb k x v; induction m using map_induction;
-  intros.
-  - eapply shift_Empty_iff in H. unfold Empty in H.
-    exfalso; apply (H (Key.shift lb k x) v); apply find_2; eauto.
-  
-  - eapply shift_Add_spec in H0; eauto. rewrite H0 in H1.
-    destruct (Key.eq_dec (Key.shift lb k x)(Key.shift lb k x0)); subst.
-    -- rewrite add_eq_o in H1; auto. inversion H1; subst. exists e.
-       reflexivity.
-    -- rewrite add_neq_o in H1; auto. apply IHm1 in H1; auto.
-Qed.     
-
-Lemma shift_find_spec_2 : forall (m : t) lb k key v, 
-  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v) -> 
-  M.find key m = Some v.
-Proof.
-  intro m; induction m using map_induction; intros lb k key v Hf.
-  - eapply shift_Empty_iff in H; exfalso; unfold Empty in H; 
-    apply (H (Key.shift lb k key) (Data.shift lb k v)); apply find_2; eauto.
-  - rewrite H0; eapply shift_Add_spec_1 in H0; auto; rewrite H0 in Hf.
-    destruct (Key.eq_dec key x); subst.
-    -- rewrite add_eq_o in *; auto; inversion Hf; clear Hf; f_equal.
-       + apply Data.eq_leibniz. eapply Data.shift_eq_iff. now rewrite H2.
-       + rewrite <- Key.shift_eq_iff; now symmetry.
-       + now symmetry.
-    -- rewrite add_neq_o in *; auto.
-      + eapply IHm1; eauto.
-      + intro. apply n; now rewrite <- Key.shift_eq_iff in H1.
-      + intro; apply n; now symmetry.
-Qed.
-
-Lemma shift_find_spec : forall lb k key v (m : t), 
-  M.find key m = Some v <-> 
-  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v).
-Proof.
-  split; intros.
-  - now apply shift_find_spec_1.
-  - eapply shift_find_spec_2; eauto.
-Qed.
-
-Lemma shift_refl : forall lb t, eq (shift lb 0 t) t.
-Proof.
-  intros; induction t0 using map_induction.
-  - now apply shift_Empty_spec.
-  - apply shift_Add_spec with (lb := lb) (k := 0) in H0 as H0'; auto.
-    unfold Add in *. intro y.
-    rewrite H0,H0'; rewrite Key.shift_refl.
-    assert (Data.shift lb 0 e = e). { apply Data.eq_leibniz. apply Data.shift_refl. }
-    rewrite H1.
-    destruct (Key.eq_dec y x); subst.
-    -- repeat rewrite add_eq_o; auto; try now symmetry.
-    -- repeat rewrite add_neq_o; auto; intro Heq; symmetry in Heq; contradiction.
-Qed.
-
-#[global]
-Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
-Proof.
-  red; red; red; red; intros; subst; revert y y0 y1 H1; rename x1 into m.
-  induction m using map_induction; intros.
-  - unfold shift; rewrite fold_Empty; auto.
-    rewrite fold_Empty; auto; try reflexivity.
-    -- apply Equal_equiv.
-    -- unfold Empty in *; intros. intro. apply find_1 in H0.
-       apply (H x e). apply find_2; now rewrite H1.
-    -- apply Equal_equiv.
-  - unfold shift; intros. rewrite fold_Add; eauto; try (now apply Equal_equiv).
-    rewrite Add_eq_spec in H0; eauto. symmetry.
-    rewrite fold_Add; eauto; try (now apply Equal_equiv).
-Qed.
-
-Lemma shift_eq_iff : forall lb k m m1, 
-  eq m m1 <-> eq (shift lb k m) (shift lb k m1).
-Proof.
-  split; intros.
-  - now rewrite H.
-  - intro y; destruct (In_dec m y).
-    -- rewrite  shift_in_spec in i.
-        destruct i. apply find_1 in H0.
-        apply shift_find_e_spec in H0 as H0'; destruct H0'.
-        apply Data.eq_leibniz in H1; subst.
-        assert ((M.find y m) = Some x0) by (eapply shift_find_spec_2; eauto).
-        rewrite H in H0; apply shift_find_spec_2 in H0; now rewrite H0,H1.
-    -- apply not_in_find in n as n''; rewrite n''; clear n''. 
-        rewrite shift_notin_spec in n.
-        apply not_in_find in n as n'. rewrite H in n'.
-        symmetry; destruct (In_dec m1 y).
-        + destruct i. apply find_1 in H0.
-          rewrite shift_find_spec in H0; rewrite n' in H0; inversion H0.
-        + now apply not_in_find.
-Qed.
-
-Lemma shift_trans : forall lb k k' t,
-  eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
-Proof.
-  intros lb k k' t; induction t using map_induction; intros. 
-  - apply shift_Empty_spec with (lb := lb) (k := (k + k')) in H as H'.
-    apply shift_Empty_iff with (lb := lb) (k := k') in H as H''.
-    apply shift_Empty_spec with (lb := lb) (k := k) in H'' as H1.
-    apply shift_Empty_spec with (lb := lb) (k := k') in H as H2. now rewrite H1, H', H2.
-
-  - apply shift_Add_spec with (lb := lb) (k := k + k') in H0 as H0'; auto.
-    apply shift_Add_spec with (lb := lb) (k := k') in H0 as H0''; auto.
-    apply shift_Add_spec_1 with (lb := lb) (k := k') in H0 as H1; auto.
-    apply shift_Add_spec with (lb := lb) (k := k) in H1 as H1'; auto.
-    -- rewrite H0'. symmetry. rewrite  H1'.
-       replace (Key.shift lb (k + k') x) 
-       with (Key.shift lb k (Key.shift lb k' x)).
-       + replace (Data.shift lb k (Data.shift lb k' e)) 
-         with (Data.shift lb (k + k') e).
-         ++ now rewrite IHt1.
-         ++ apply Data.eq_leibniz. now rewrite Data.shift_trans.
-       + apply Key.eq_leibniz; now apply Key.shift_trans.
-    -- now rewrite <- shift_notin_spec.
-Qed.
-
-Lemma shift_permute : forall lb k k' t,
-  eq (shift lb k (shift lb k' t)) (shift lb k' (shift lb k t)).
-Proof.
-  intros lb k k' t; induction t using map_induction; intros.
-  - apply shift_Empty_spec with (lb := lb) (k := k) in H as H'.
-    apply shift_Empty_spec with (lb := lb) (k := k') in H as H''.
-    apply shift_Empty_iff with (lb := lb) (k := k') in H as H1.
-    apply shift_Empty_iff with (lb := lb) (k := k) in H as H1'.
-    apply shift_Empty_spec with (lb := lb) (k := k) in H1.
-    apply shift_Empty_spec with (lb := lb) (k := k') in H1'.
-    now rewrite H1,H1',H',H''.
-  - apply shift_Add_spec_1 with (lb := lb) (k := k) in H0 as H1; auto.
-    apply shift_Add_spec_1 with (lb := lb) (k := k') in H0 as H1'; auto.
-    apply shift_Add_spec with (lb := lb) (k := k') in H1;
-    apply shift_Add_spec with (lb := lb) (k := k) in H1';
-    try (now rewrite <- shift_notin_spec).
-    rewrite H1,H1'.
-    replace (Data.shift lb k' (Data.shift lb k e)) with (Data.shift lb k (Data.shift lb k' e)).
-    replace (Key.shift lb k' (Key.shift lb k x)) with (Key.shift lb k (Key.shift lb k' x)).
-    -- now rewrite IHt1.
-    -- apply Key.eq_leibniz; apply Key.shift_permute.
-    -- apply Data.eq_leibniz; apply Data.shift_permute.
-Qed.
-
-
-Lemma shift_unfold : forall lb k k' t,
-  eq (shift lb (k + k') t) (shift (lb + k) k' (shift lb k t)). 
-Proof.
-  intros lb k k' t; induction t using map_induction.
-  - repeat rewrite shift_Empty_spec; auto; try reflexivity.
-  - rewrite shift_Add_spec; eauto. symmetry.
-    eapply shift_Add_spec_1 with (lb := lb) (k := k) in H0 as H0'; auto.
-    eapply shift_Add_spec with (lb := lb + k) (k := k') in H0' as H0''.
-    -- rewrite H0''. 
-       replace (Key.shift (lb + k) k' (Key.shift lb k x)) with (Key.shift lb (k + k') x).
-       replace (Data.shift (lb + k) k' (Data.shift lb k e)) with (Data.shift lb (k + k') e).
-       + now rewrite IHt1.
-       + apply Data.eq_leibniz. apply Data.shift_unfold. 
-       + apply Key.eq_leibniz. now rewrite Key.shift_unfold. 
-    -- now rewrite <- shift_notin_spec.
-Qed.
-
-Lemma shift_unfold_1 : forall k k' k'' t,
-  k <= k' -> k' <= k'' -> 
-  eq (shift k' (k'' - k') (shift k  (k' - k) t)) (shift k (k'' - k) t).
-Proof.
-  intros k k' k'' t Hlt Hlt'; induction t using map_induction.
-  - repeat rewrite shift_Empty_spec; auto; try reflexivity. 
-  - eapply shift_Add_spec_1 with (lb := k) (k := (k' - k)) in H0 as H0'; auto.
-    eapply shift_Add_spec with (lb := k') (k := (k'' - k')) in H0' as H0''.
-    -- rewrite H0''. symmetry; rewrite shift_Add_spec; eauto; symmetry.
-       replace (Key.shift k' (k'' - k') (Key.shift k (k' - k) x))
-       with (Key.shift k (k'' - k) x).
-       replace (Data.shift k' (k'' - k') (Data.shift k (k' - k) e))
-       with (Data.shift k (k'' - k) e).
-       + now rewrite IHt1.
-       + apply Data.eq_leibniz; now rewrite Data.shift_unfold_1.
-       + apply Key.eq_leibniz. now rewrite Key.shift_unfold_1.
-    -- now rewrite <- shift_notin_spec.
-Qed.
-
-Lemma shift_remove_spec : forall lb k x t,
-  eq (M.remove (Key.shift lb k x) (shift lb k t)) (shift lb k (M.remove x t)).
-Proof.
-  intros lb k x t; induction t using map_induction.
-  - assert (~ M.In (Key.shift lb k x) (shift lb k t0)).
-    { 
-      apply shift_notin_spec; intro; unfold Empty in *.
-      destruct H0. now apply (H x x0).  
-    }
-    apply shift_notin_spec in H0 as H0'.
-    rewrite <- remove_id in H0; rewrite H0; clear H0.
-    rewrite <- remove_id in H0'; now rewrite H0'.
-
-  - unfold Add in H0; rewrite H0. destruct (Key.eq_dec x x0).
-    -- apply Key.eq_leibniz in e0; subst. rewrite remove_add_1.
-       rewrite shift_add_notin_spec; auto. now rewrite remove_add_1.
-    -- rewrite remove_add_2; try (intro c; symmetry in c; contradiction).
-       repeat rewrite shift_add_notin_spec; auto.
-       + rewrite remove_add_2; 
-         try (rewrite <- Key.shift_eq_iff; intro c; symmetry in c; contradiction).
-         now rewrite IHt1.
-       + intro c; rewrite remove_in_iff in c; destruct c; contradiction.
-Qed.
-
-Lemma shift_eq_1 : forall lb k t t1, eq (shift lb k t) (shift lb k t1) -> eq t t1.
-Proof.
-  intros lb k t; induction t using map_induction; intros t' Heq.
-  - rewrite shift_Empty_spec in Heq; auto. rewrite Empty_eq_spec in H; eauto.
-    rewrite <- shift_Empty_iff in H. rewrite shift_Empty_spec in Heq; auto.
-  - unfold Add in H0; rewrite H0 in *. 
-    rewrite shift_add_notin_spec in Heq; auto.
-    assert (M.find x t' = Some e). 
-    { erewrite shift_find_spec; rewrite <- Heq. now apply add_eq_o. }
-    assert (M.find (Key.shift lb k x) (shift lb k t') = Some (Data.shift lb k e)).
-    { now rewrite <- shift_find_spec. }
-    apply add_remove_spec in H1,H2. rewrite H1; rewrite H2 in Heq. clear H1 H2.
-    assert (eq t1 (M.remove x t')).
-    { 
-      apply IHt1; intro y. 
-      assert (~ M.In x (M.remove x t')). { now apply remove_1. }
-      destruct (Key.eq_dec y (Key.shift lb k x)).
-      -- apply Key.eq_leibniz in e0; subst; 
-        rewrite shift_notin_spec in H. apply not_in_find in H; rewrite H.
-        rewrite shift_notin_spec in H1. apply not_in_find in H1; now rewrite H1.
-      -- rewrite <- add_neq_o with (e := (Data.shift lb k e)) (x := (Key.shift lb k x)); eauto.
-        + symmetry. 
-          rewrite <- add_neq_o with (e := (Data.shift lb k e)) (x := (Key.shift lb k x)); eauto.
-          ++ rewrite Heq. rewrite add_neq_o; auto.
-              * symmetry. rewrite add_neq_o; auto.
-                ** now rewrite shift_remove_spec.
-                ** intro Heq'; symmetry in Heq'; contradiction.
-              * intro Heq'; symmetry in Heq'; contradiction.
-          ++ intro Heq'; symmetry in Heq'; contradiction.
-        + intro Heq'; symmetry in Heq'; contradiction.     
-    }
-    now rewrite H1.
-Qed.
-
-Lemma shift_add_spec : forall lb k x v  (m : t),
+Lemma shift_add_spec (lb k : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
   eq (shift lb k (M.add x v m)) 
       (M.add (Key.shift lb k x) (Data.shift lb k v) (shift lb k m)).
 Proof.
-  intros lb k x v m. destruct (In_dec m x).
-  - revert lb k x v i; induction m using map_induction.
-    -- intros; exfalso; unfold Empty in *; destruct i.
-       now apply (H x x0).
-    -- intros. unfold Add in H0. rewrite H0 in *.
-       rewrite add_in_iff in i. destruct i.
-       + rewrite H1 in *. unfold eq,M.Equal; intros. rewrite add_shadow.
+  destruct (In_dec m x) as [HIn | HnIn].
+  - revert HIn; induction m using map_induction; intro.
+    -- exfalso.
+       rewrite Empty_eq_spec in *; auto.
+       now apply not_in_empty in HIn.
+    -- unfold Add in H0; rewrite H0 in *; clear H0.
+       apply add_in_iff in HIn as [Heq | HIn].
+       + rewrite Heq in *.
+         rewrite add_shadow.
          repeat rewrite shift_add_notin_spec; auto.
-         destruct (Key.eq_dec y (Key.shift lb k x0)).
-         ++ rewrite e0. repeat rewrite add_eq_o; auto; reflexivity.
-         ++ repeat rewrite add_neq_o; auto; intro c; symmetry in c; contradiction.
-       + destruct (Key.eq_dec x0 x).
-         ++ rewrite e0 in *. contradiction.
-         ++ rewrite add_add_2; auto. symmetry; rewrite shift_add_notin_spec; auto.
-            symmetry; rewrite shift_add_notin_spec.
-            * rewrite add_add_2; auto.
-              ** rewrite IHm1; now auto.
-              ** now rewrite <- Key.shift_eq_iff.
-            * intro. apply add_in_iff in H2; destruct H2; auto.
+         now rewrite add_shadow.
+       + destruct (Key.eq_dec x x0) as [Heq | Hneq].
+         ++ rewrite Heq in HIn. 
+            contradiction.
+         ++ rewrite add_add_2; auto.
+            rewrite shift_add_notin_spec.
+            * rewrite IHm1; auto.
+              rewrite shift_add_notin_spec; auto.
+              rewrite add_add_2; try reflexivity.
+              rewrite <- Key.shift_eq_iff.
+              intro Heq; symmetry in Heq.
+              contradiction.
+            * rewrite add_in_iff.
+              intros [Heq | HIn0]; contradiction.
   - now apply shift_add_notin_spec.
 Qed.
 
-(** **** Valid continued *)
-
-
-Lemma valid_weakening : forall k k' t, (k <= k') -> valid k t -> valid k' t.
+Lemma shift_Add_spec (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m m' : t) :
+  Add key v m m' -> 
+  eq (shift lb k m') (M.add (Key.shift lb k key) (Data.shift lb k v) (shift lb k m)).
 Proof.
-  intros k k' t; revert k k'; induction t using map_induction; intros k k' Hle Hvt.
+  unfold Add; intro Heq.
+  rewrite Heq.
+  now apply shift_add_spec. 
+Qed.
+  
+Lemma shift_in_spec_1 (lb k : Lvl.t) (key : Key.t) (m : t) :
+  M.In key m -> M.In (Key.shift lb k key) (shift lb k m).
+Proof.
+  induction m using map_induction; intro HIn.
+  - rewrite Empty_eq_spec in HIn; auto.
+    apply not_in_empty in HIn.
+    now exfalso.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec.
+    rewrite add_in_iff in *.
+    destruct HIn as [Heq | HIn]; auto.
+    left.
+    now rewrite <- Key.shift_eq_iff.
+Qed.
+
+Lemma shift_in_spec_2 (lb k : Lvl.t) (key : Key.t) (m : t) :
+  M.In (Key.shift lb k key) (shift lb k m) -> M.In key m.
+Proof.
+  induction m using map_induction; intro HIn.
+  - rewrite shift_Empty_spec in HIn; auto.
+    rewrite Empty_eq_spec in HIn; auto.
+    apply not_in_empty in HIn.
+    now exfalso.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    rewrite shift_add_notin_spec in *; auto.
+    rewrite add_in_iff in *.
+    destruct HIn as [Heq | HIn]; auto.
+    left.
+    now rewrite <- Key.shift_eq_iff in Heq.
+Qed.
+
+Lemma shift_in_iff (lb k : Lvl.t) (key : Key.t) (m : t) : 
+  M.In key m <-> M.In (Key.shift lb k key) (shift lb k m).
+Proof. 
+  split; intro HIn.
+  - apply (shift_in_spec_1 _ _ _ _ HIn).
+  - apply (shift_in_spec_2 lb k _ _ HIn).
+Qed.
+
+Lemma shift_notin_iff (lb k : Lvl.t) (key : Key.t) (m : t) : 
+  ~ M.In key m <-> ~ M.In (Key.shift lb k key) (shift lb k m).
+Proof.
+  split; intros HnIn HIn; apply HnIn.
+  - rewrite shift_in_iff; eauto.
+  - now rewrite <- shift_in_iff.
+Qed.
+
+Lemma shift_find_spec_1 (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m : t) : 
+  M.find key m = Some v -> 
+  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v).
+Proof.
+  induction m using map_induction; intro Hfm.
+  - rewrite Empty_eq_spec in Hfm; auto. 
+    rewrite empty_o in *.
+    inversion Hfm.
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec.
+    destruct (Key.eq_dec x key) as [Heq | Hneq].
+    -- rewrite add_eq_o in *; auto.
+       + now inversion Hfm.
+       + now rewrite <- Key.shift_eq_iff.
+    -- rewrite add_neq_o in *; auto.
+       now rewrite <- Key.shift_eq_iff.
+Qed.
+
+Lemma shift_find_spec_2 (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m : t) : 
+  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v) -> 
+  M.find key m = Some v.
+Proof.
+  induction m using map_induction; intro Hfm.
+  - rewrite shift_Empty_spec in Hfm; auto.
+    rewrite Empty_eq_spec in Hfm; auto.
+    rewrite empty_o in Hfm.
+    inversion Hfm.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec in Hfm.
+    destruct (Key.eq_dec x key) as [Heq | Hneq].
+    -- rewrite add_eq_o in *; auto.
+       + inversion Hfm; f_equal. 
+         apply Data.eq_leibniz. 
+         eapply Data.shift_eq_iff. 
+         now rewrite H1.
+       + now rewrite <- Key.shift_eq_iff.
+    -- rewrite add_neq_o in *; auto.
+       now rewrite <- Key.shift_eq_iff.
+Qed.
+
+Lemma shift_find_iff (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m : t) : 
+  M.find key m = Some v <-> 
+  M.find (Key.shift lb k key) (shift lb k m) = Some (Data.shift lb k v).
+Proof.
+  split; intro Hfm.
+  - apply (shift_find_spec_1 _ _ _ _ _ Hfm).
+  - apply (shift_find_spec_2 lb k _ _ _ Hfm).
+Qed.
+
+Lemma shift_find_e_spec (lb k : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
+  M.find (Key.shift lb k x) (shift lb k m) = Some v -> 
+  exists v', Data.eq v (Data.shift lb k v').
+Proof.
+  induction m using map_induction; intro Hfm.
+  - rewrite shift_Empty_spec in Hfm; auto.
+    rewrite Empty_eq_spec in Hfm; auto.
+    rewrite empty_o in Hfm.
+    inversion Hfm.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec in Hfm.
+    destruct (Key.eq_dec (Key.shift lb k x0) (Key.shift lb k x)) as [Heq | Hneq].
+    -- rewrite add_eq_o in Hfm; auto.
+       inversion Hfm; subst.
+       now exists e.
+    -- rewrite add_neq_o in Hfm; auto.
+Qed.     
+
+Lemma shift_eq_iff (lb k : Lvl.t) (m m1 : t) : 
+  eq m m1 <-> eq (shift lb k m) (shift lb k m1).
+Proof.
+  split; intro Heq.
+  - now rewrite Heq.
+  - intro y; destruct (In_dec m y) as [[v Hfm] | HnIn].
+    -- apply find_1 in Hfm.
+       rewrite Hfm.
+       apply (shift_find_iff lb k) in Hfm.
+       rewrite Heq in Hfm.
+       apply shift_find_iff in Hfm.
+       now symmetry.
+    -- apply not_in_find in HnIn as Hneq.
+       rewrite Hneq; clear Hneq.
+       symmetry.
+       rewrite shift_in_iff in HnIn.
+       rewrite Heq in HnIn.
+       rewrite <- shift_in_iff in HnIn.
+       now apply not_in_find.
+Qed.
+
+Lemma shift_Add_iff (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m m' : t) :
+  Add key v m m' <->
+  Add (Key.shift lb k key) (Data.shift lb k v) (shift lb k m) (shift lb k m').
+Proof.
+  unfold Add; split; intro HAdd.
+  - rewrite HAdd.
+    now rewrite shift_add_spec.
+  - rewrite <- shift_add_spec in HAdd.
+    now rewrite <- shift_eq_iff in HAdd.
+Qed.
+
+Lemma shift_remove_spec (lb k : Lvl.t) (x : Key.t) (t : t) :
+  eq (M.remove (Key.shift lb k x) (shift lb k t)) (shift lb k (M.remove x t)).
+Proof.
+  induction t using map_induction.
+  - assert (HnIn : ~ M.In (Key.shift lb k x) (shift lb k t0)).
+    { 
+      apply shift_notin_iff.
+      rewrite Empty_eq_spec; auto.
+      now apply not_in_empty.
+    }
+    apply shift_notin_iff in HnIn as HnIn'.
+    rewrite <- remove_id in *.
+    now rewrite HnIn,HnIn'.
+  - unfold Add in H0; rewrite H0; clear H0.
+    destruct (Key.eq_dec x0 x) as [Heq | Hneq].
+    -- symmetry.
+       rewrite Heq at 1.
+       rewrite shift_add_spec.
+       rewrite (Key.shift_eq_iff lb k) in Heq.
+       rewrite Heq.
+       now repeat rewrite remove_add_1.
+    -- rewrite remove_add_2; auto.
+       repeat rewrite shift_add_spec; auto.
+       rewrite remove_add_2.
+       + now rewrite IHt1.
+       + now rewrite <- Key.shift_eq_iff.
+Qed.
+
+Lemma shift_zero_refl (lb : Lvl.t) (t : t) : eq (shift lb 0 t) t.
+Proof.
+  induction t using map_induction.
+  - now apply shift_Empty_spec.
+  - unfold Add in *; rewrite H0; clear H0.
+    rewrite shift_add_spec.
+    rewrite IHt1.
+    rewrite Key.shift_zero_refl.
+    assert (Hzr : Data.shift lb 0 e = e). 
+    { apply Data.eq_leibniz; apply Data.shift_zero_refl. }
+
+    now rewrite Hzr.
+Qed.
+
+Lemma shift_trans (lb k k' : Lvl.t) (t : t) :
+  eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
+Proof.
+  induction t using map_induction. 
+  - now repeat rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0; clear H0.
+    repeat rewrite shift_add_spec; auto.
+    rewrite Key.shift_trans.
+    rewrite IHt1.
+
+    replace (Data.shift lb k (Data.shift lb k' e)) 
+    with (Data.shift lb (k + k') e); try reflexivity.
+    apply Data.eq_leibniz. 
+    now rewrite Data.shift_trans.
+Qed.
+
+Lemma shift_permute (lb k k' : Lvl.t) (t : t) :
+  eq (shift lb k (shift lb k' t)) (shift lb k' (shift lb k t)).
+Proof.
+  induction t using map_induction.
+  - now repeat rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0; clear H0.
+    repeat rewrite shift_add_spec; auto.
+    rewrite Key.shift_permute.
+    rewrite IHt1.
+
+    replace (Data.shift lb k' (Data.shift lb k e)) 
+    with (Data.shift lb k (Data.shift lb k' e)); try reflexivity.
+    apply Data.eq_leibniz.
+    now apply Data.shift_permute.
+Qed.
+
+
+Lemma shift_unfold (lb k k' : Lvl.t) (t : t) :
+  eq (shift lb (k + k') t) (shift (lb + k) k' (shift lb k t)). 
+Proof.
+  induction t using map_induction. 
+  - now repeat rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0; clear H0.
+    repeat rewrite shift_add_spec; auto.
+    rewrite Key.shift_unfold.
+    rewrite IHt1.
+
+    replace (Data.shift (lb + k) k' (Data.shift lb k e)) 
+    with (Data.shift lb (k + k') e); try reflexivity.
+    apply Data.eq_leibniz. 
+    now rewrite Data.shift_unfold.
+Qed.
+
+Lemma shift_unfold_1 (k k' k'' : Lvl.t) (t : t) :
+  k <= k' -> k' <= k'' -> 
+  eq (shift k' (k'' - k') (shift k  (k' - k) t)) (shift k (k'' - k) t).
+Proof.
+  intros Hle Hle1; induction t using map_induction. 
+  - now repeat rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0; clear H0.
+    repeat rewrite shift_add_spec; auto.
+    rewrite Key.shift_unfold_1; auto.
+    rewrite IHt1.
+
+    replace (Data.shift k' (k'' - k') (Data.shift k (k' - k) e))
+    with (Data.shift k (k'' - k) e); try reflexivity.
+    apply Data.eq_leibniz. 
+    now rewrite Data.shift_unfold_1.
+Qed.
+
+
+(** **** Interaction property between [valid] and [shift]  *)
+
+Lemma valid_weakening (k k' : Lvl.t) (t : t) : (k <= k') -> valid k t -> valid k' t.
+Proof.
+  induction t using map_induction; intros Hle Hvt.
   - now apply valid_Empty_spec.
-  - rewrite <- valid_Add_spec with (lb := k) in Hvt; eauto.
-    rewrite <- valid_Add_spec with (lb := k'); eauto.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    rewrite valid_add_notin_spec in *; auto.
     destruct Hvt as [Hv [Hv' Hvt1]]. 
-    repeat split.
+    repeat split; auto.
     -- now apply Key.valid_weakening with k. 
     -- now apply Data.valid_weakening with k.
-    -- now apply IHt1 with k.
 Qed.
 
-Lemma shift_preserves_valid_1 : forall lb k k' t, valid k t -> valid (k + k') (shift lb k' t).
+Lemma shift_preserves_valid_1 (lb k k' : Lvl.t) (t : t) : 
+  valid k t -> valid (k + k') (shift lb k' t).
 Proof.
-  intros lb k k' t; revert lb k k'; induction t using map_induction; 
-  intros lb k k' Hvt.
-  - apply shift_Empty_iff with (lb := lb) (k := k') in H.
-    now apply valid_Empty_spec with (lb := k + k') in H.
-  - eapply valid_Add_spec in Hvt; eauto; destruct Hvt as [Hv [Hv' Hvt']].
-    apply IHt1 with (lb := lb) (k := k) (k' := k') in Hvt'.
-    apply Key.shift_preserves_valid_1 with (lb := lb) (k' := k') in Hv.
-    apply Data.shift_preserves_valid_1 with (lb := lb) (k' := k') in Hv'.
-
-    apply shift_Add_spec_1 with (lb := lb) (k := k') in H0; auto.
-    rewrite <- valid_Add_spec; eauto. now apply shift_notin_spec.
+  induction t using map_induction; intro Hvt.
+  - rewrite shift_Empty_spec; auto.
+    now rewrite valid_Empty_iff.
+  - eapply valid_Add_iff in Hvt as [Hv [Hv' Hvt']]; eauto.
+    rewrite shift_Add_spec; eauto.
+    rewrite valid_add_notin_spec; auto.
+    -- repeat split; auto.
+       + now apply Key.shift_preserves_valid_1.
+       + now apply Data.shift_preserves_valid_1.
+    -- now apply shift_notin_iff.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,
+Lemma shift_preserves_valid_gen (lb lb' k k' : Lvl.t) (t : t) :
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> k' - k = lb' - lb -> 
   valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
-  intros lb lb' k k' t; induction t using map_induction; intros.
-  - apply shift_Empty_iff with (lb := k) (k := (k' - k)) in H.
+  intros Hle Hle1 Hle2 Hle3 Heq; induction t using map_induction; intro Hvt.
+  - rewrite shift_Empty_spec; auto.
     now apply valid_Empty_spec.
-  - eapply valid_Add_spec in H6; eauto; destruct H6 as [Hvr [HvData Hvt]].
-    eapply IHt1 in Hvt; eauto.
-    apply shift_Add_spec_1 with (lb := k) (k := k' - k) in H0; auto.
-    rewrite <- valid_Add_spec with (m := (shift k (k' - k) t1)); eauto.
+  - eapply valid_Add_iff in Hvt as [Hvx [Hve Hvt]]; eauto.
+    rewrite shift_Add_spec; eauto.
+    rewrite valid_add_notin_spec.
     -- repeat split; auto.
-        + apply Key.shift_preserves_valid_2 with (lb := lb); assumption.
-        + apply Data.shift_preserves_valid_2 with (lb := lb); assumption.
-    -- now apply shift_notin_spec.
+        + now apply Key.shift_preserves_valid_gen with (lb := lb).
+        + now apply Data.shift_preserves_valid_gen with (lb := lb).
+    -- now apply shift_notin_iff.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t,
+Lemma shift_preserves_valid_2 (lb lb' : Lvl.t) (t : t) :
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof. intros; eapply shift_preserves_valid_2; eauto. Qed.
-
-Lemma shift_preserves_valid : forall k k' t, valid k t -> valid (k + k') (shift k k' t).
-Proof. intros; now apply shift_preserves_valid_1. Qed.
-
-Lemma shift_preserves_valid_4 : forall k t, valid k t -> valid k (shift k 0 t).
-Proof. intros; replace k with (k + 0) by lia; now apply shift_preserves_valid_1. Qed.
-
-
-End IsLvlMapWL.
-
-
-(** *** Map implementation fully constrained *)
-Module IsBdlLvlMapWL  (Key : IsBdlLvlOTWL)
-                                (Data : IsBdlLvlETWL) 
-                                (M : Interface.S Key)
-                                (MO : MapInterface Key Data M) 
-                                 <: IsBdlLvlMapWLInterface Key Data M MO.
-
-Include IsLvlMapWL Key Data M MO.
-Import M OP.P.  
-
-Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
-Proof.
-  intros; induction t0 using map_induction.
-  - now apply shift_Empty_spec.
-  - unfold Add in *; rewrite H1 in *.
-    apply valid_add_notin_spec in H; eauto.
-    destruct H as [Hvr [Hvelt Hvt]]. apply IHt0_1 in Hvt.
-    rewrite shift_add_notin_spec; auto; rewrite Hvt.
-    rewrite Key.shift_valid_refl; auto. eapply Data.shift_valid_refl in Hvelt;
-    apply Data.eq_leibniz in Hvelt; now rewrite Hvelt.
+Proof. 
+  intros Hle Hvt. 
+  apply (shift_preserves_valid_gen lb lb' lb lb'); auto.
 Qed.
 
-End IsBdlLvlMapWL.
+Lemma shift_preserves_valid (k k' : Lvl.t) (t : t) : valid k t -> valid (k + k') (shift k k' t).
+Proof. intro Hvt; now apply shift_preserves_valid_1. Qed.
+
+Lemma shift_preserves_valid_zero (k : Lvl.t) (t : t) : valid k t -> valid k (shift k 0 t).
+Proof. 
+  intro Hvt. 
+  replace k with (k + 0) by lia. 
+  now apply shift_preserves_valid_1. 
+Qed.
 
 
-(** *** Map Make *)
+End IsLvlMapKD.
 
-Module MakeLvlMapWL  (Key : IsLvlOTWL)
-                              (Data : IsLvlETWL) <: IsLvlET.
+
+(** ** Bindless Leveled Map Implementation *)
+Module IsBdlLvlMapKD  
+  (Key : IsBdlLvlOTWL) (Data : IsBdlLvlETWL) 
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvlMapKDInterface Key Data M MO.
+
+Include IsLvlMapKD Key Data M MO.
+Import MO OP.P.  
+
+Lemma shift_valid_refl (lb k : Lvl.t) (t : t) : valid lb t -> eq (shift lb k t) t.
+Proof.
+  induction t using map_induction; intro Hvt.
+  - now apply shift_Empty_spec.
+  - unfold Add in *; rewrite H0 in *; clear H0.
+    apply valid_add_notin_spec in Hvt as [Hvx [Hve Hvt]]; auto.
+    rewrite shift_add_spec.
+    rewrite IHt1; auto.
+    rewrite Key.shift_valid_refl; auto. 
+    eapply Data.shift_valid_refl in Hve.
+    apply Data.eq_leibniz in Hve. 
+    now rewrite Hve.
+Qed.
+
+End IsBdlLvlMapKD.
+
+(** ---- *)
+
+(** * Make - Leveled Map [LvlK/LvlD] *)
+
+Module MakeLvlMapKD (Key : IsLvlOTWL) (Data : IsLvlETWL) <: IsLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include IsLvlMapWL Key Data Raw Ext.
+  Include IsLvlMapKD Key Data Raw Ext.
   Include OP.P.
 
-End MakeLvlMapWL.
+End MakeLvlMapKD.
 
-Module MakeBdlLvlMapWL  (Key : IsBdlLvlOTWL)
-                              (Data : IsBdlLvlETWL) <: IsBdlLvlET.
+Module MakeBdlLvlMapKD  (Key : IsBdlLvlOTWL) (Data : IsBdlLvlETWL) <: IsBdlLvlET.
   
   Module Raw := MMaps.OrdList.Make Key.
   Module Ext := MapET Key Data Raw.
-  Include IsBdlLvlMapWL Key Data Raw Ext.
+  Include IsBdlLvlMapKD Key Data Raw Ext.
   Include OP.P.
 
-End MakeBdlLvlMapWL.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+End MakeBdlLvlMapKD.

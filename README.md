@@ -123,8 +123,6 @@ make install
 
 ### DeBrLevel
 
-# DeBrLevel
-
 - [doc/](/doc)
   - [resources/](/doc/resources)
     - [config.js](/doc/resources/config.js)

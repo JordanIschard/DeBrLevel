@@ -3,7 +3,6 @@ From DeBrLevel Require Import LevelInterface Level.
 
 Module IsLvlPairET (O1 : IsLvlET) (O2 : IsLvlET) <: IsLvlET.
 
-
 (** *** Definition *)
 Section definition.
 Definition t := (O1.t * O2.t)%type.
@@ -79,10 +78,10 @@ Section shift.
 Variable lb k k' k'' : Level.t.
 Variable t : t.
 
-Lemma shift_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift lb 0 t) t.
 Proof. 
   destruct t; split; unfold RelationPairs.RelCompFun; simpl;
-  try (apply O1.shift_refl); now apply O2.shift_refl.
+  try (apply O1.shift_zero_refl); now apply O2.shift_zero_refl.
 Qed.
 
 Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
@@ -142,20 +141,20 @@ Proof.
   - now apply O2.shift_preserves_valid_1.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,  
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
   k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
   intros; destruct t0,H4; split; simpl in *.
-  - now apply O1.shift_preserves_valid_2 with lb.
-  - now apply O2.shift_preserves_valid_2 with lb.
+  - now apply O1.shift_preserves_valid_gen with lb.
+  - now apply O2.shift_preserves_valid_gen with lb.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t, 
+Lemma shift_preserves_valid_2 : forall lb lb' t, 
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof.  intros. eapply shift_preserves_valid_2; eauto. Qed.
+Proof.  intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
-Lemma shift_preserves_valid_4 : forall k t,
+Lemma shift_preserves_valid_zero : forall k t,
   valid k t -> valid k (shift k 0 t).
 Proof. 
   intros; replace k with (k + 0); try lia; 
@@ -370,10 +369,10 @@ Section shift.
 Variable lb k k' k'' : Level.t.
 Variable t : t.
 
-Lemma shift_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift lb 0 t) t.
 Proof. 
   destruct t; split; unfold RelationPairs.RelCompFun; simpl;
-  try (apply O1.shift_refl); now apply O2.shift_refl.
+  try (apply O1.shift_zero_refl); now apply O2.shift_zero_refl.
 Qed.
 
 Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
@@ -433,20 +432,20 @@ Proof.
   - now apply O2.shift_preserves_valid_1.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' k k' t,  
+Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
   k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
   k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
 Proof.
   intros; destruct t0,H4; split; simpl in *.
-  - now apply O1.shift_preserves_valid_2 with lb.
-  - now apply O2.shift_preserves_valid_2 with lb.
+  - now apply O1.shift_preserves_valid_gen with lb.
+  - now apply O2.shift_preserves_valid_gen with lb.
 Qed.
 
-Lemma shift_preserves_valid_3 : forall lb lb' t, 
+Lemma shift_preserves_valid_2 : forall lb lb' t, 
   lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof.  intros. eapply shift_preserves_valid_2; eauto. Qed.
+Proof.  intros. eapply shift_preserves_valid_gen; eauto. Qed.
 
-Lemma shift_preserves_valid_4 : forall k t,
+Lemma shift_preserves_valid_zero : forall k t,
   valid k t -> valid k (shift k 0 t).
 Proof. 
   intros; replace k with (k + 0); try lia; 

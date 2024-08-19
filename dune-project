@@ -1,12 +1,17 @@
 (lang dune 3.12)
 (using coq 0.8)
-(version 0.1)
+(version 1.2)
 (name coq-debr-lvl)
 
 (package
  (name coq-debr-lvl)
- (synopsis "Helper for using De Bruijn level representation.")
- (description "Representation of binders or arbitrary names can be annoying and use of representation is common. We develop a collection of modules and module types for simply defined Types or Sets that use De Bruijn levels as a representation.")
+ (synopsis "Collection of interfaces and implementations for a modular using of De Bruijn level.")
+ (description 
+  "Formalization of a language often implies variables or equivalent. A specific representation of them is required in order 
+   to avoid capture issues. Consequently, we define here a collection of interfaces and implementations for using De Bruijn level.
+   In addition to the definition of a level and its minimal set of functions/properties, we propose a modular way to define a
+   'leveled' elements and provide numerous predefined data types and data structures such as option, pair, list, map, etc."
+ )
  (depends
   (coq (= 8.18.0))
   (coq-mmaps (>= 1.1))
