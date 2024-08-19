@@ -13,62 +13,70 @@ Module IsLvlMapLVL
 Include IsLvlMapK Level Data M MO.
 Import MO OP.P.
 
-Lemma shift_new_notin_spec : forall lb k t,
+Lemma shift_new_notin_spec (lb k : Lvl.t) (t : t) :
   lb >= (new_key t) -> ~ M.In lb (shift lb k t).
 Proof.
-  intros lb k t; revert lb k;
-  induction t using map_induction; intros lb k Hgeq.
+  induction t using map_induction; intros Hgeq.
   - rewrite shift_Empty_spec; auto.
-    unfold Empty in *. intro HIn. destruct HIn. now apply (H lb x).
-  - unfold Add in H0; rewrite H0 in *. rewrite shift_add_notin_spec; auto. intro Hin.
-    rewrite add_in_iff in Hin; destruct Hin.
-    -- unfold Level.shift in H1. destruct (Nat.leb_spec0 lb x).
-        + assert (M.In x t2).
-          { exists e. apply find_2; rewrite H0. now apply add_eq_o. }
-          assert (~ M.In x t2). { apply new_key_notin_spec; lia. }
-          contradiction.
-        + rewrite H1 in *; apply n. lia.
-    --  revert H1. apply IHt1. apply new_key_Add_spec in H0; auto.
-        destruct H0 as [[Heq Hleb] | [Heq Hgt]]; lia.
+    rewrite Empty_eq_spec; auto. 
+    apply not_in_empty.
+  - unfold Add in H0; rewrite H0 in *; clear H0. 
+    rewrite shift_add_spec.
+    rewrite add_in_iff. 
+    intros [Heq | HIn]; subst.
+    -- unfold Level.shift in Heq. 
+       destruct (Nat.leb_spec0 lb x) as [Hle | Hnle].
+       + assert (HIn: M.In x (M.add x e t1)).
+         { now rewrite add_in_iff; left. }
+         assert (HnIn: ~ M.In x (M.add x e t1)).
+         { apply new_key_notin_spec; lia. }
+         contradiction.
+       + subst; lia.
+    -- apply IHt1; auto.
+       apply new_key_add_spec with (v := e) in H; auto.
+       destruct H as [[Heq Hleb] | [Heq Hgt]]; lia.
 Qed.
 
-Lemma shift_max_spec : forall lb k t,
+Lemma shift_max_spec (lb k : Lvl.t) (t : t) :
   lb >= (new_key t) -> max_key (shift lb k t) = max_key t.
 Proof.
-  intros lb k t; revert lb k; induction t using map_induction; intros lb k Hleb.
-  - eapply shift_Empty_spec in H as H'; apply max_key_eq; eauto.
-  - eapply shift_Add_spec in H0 as H0'; auto.
-    apply max_key_eq in H0'; rewrite H0'. clear H0'.
-    unfold Add in H0. apply max_key_eq in H0 as H0'; rewrite H0'; clear H0'.
-    assert (lb >= new_key t1).
+  induction t using map_induction; intro Hleb.
+  - rewrite shift_Empty_spec; auto.
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec. 
+    assert (Hle1: lb >= new_key t1).
     {
-        apply new_key_Add_spec in H0; auto.
-        destruct H0 as [[Heq Hleb'] | [Heq Hgt]]; lia.
+      apply new_key_add_spec with (v := e) in H; auto.
+      destruct H as [[Heq Hleb'] | [Heq Hgt]]; lia.
     }
-    apply IHt1 with (k := k) in H1.
-    assert ((Level.shift lb k x) = x).
+    apply IHt1 in Hle1.
+    assert (Heq : (Level.shift lb k x) = x).
     { 
       rewrite Level.shift_valid_refl; auto. 
       unfold Level.valid.
-      assert (M.In x t2).
-      { exists e. apply find_2; rewrite H0. now apply add_eq_o. }
-      apply new_key_in_spec in H2; lia.
+      assert (HIn : M.In x (M.add x e t1)).
+      { rewrite add_in_iff; now left. }
+      apply new_key_in_spec in HIn; lia.
     }
-    rewrite H2. eapply max_key_add_spec_4; auto.
-    rewrite <- H2; now apply shift_notin_iff.
+    rewrite Heq.
+    eapply max_key_add_spec_1; eauto.
+    rewrite <- Heq.
+    now apply shift_notin_iff.
 Qed.
 
-Lemma shift_new_spec : forall lb k t,
+Lemma shift_new_spec (lb k : Lvl.t) (t : t) :
   lb >= (new_key t) -> new_key (shift lb k t) = new_key t.
 Proof.
-  intros; repeat rewrite new_key_unfold.
-  destruct (M.is_empty t0) eqn:HEmp.
-  - apply is_empty_2 in HEmp as HEmp'.
-    eapply shift_Empty_iff in HEmp'. apply is_empty_1 in HEmp'.
-    now rewrite HEmp'.
-  - destruct (M.is_empty (shift lb k t0)) eqn:HEmp'.
-    -- apply is_empty_2 in HEmp'. rewrite <- shift_Empty_iff in HEmp'.
-        apply is_empty_1 in HEmp'; rewrite HEmp in *; inversion HEmp'.
+  intro Hge; repeat rewrite new_key_unfold.
+  destruct (M.is_empty t) eqn:HEmp.
+  - rewrite shift_Empty_spec.
+    -- now rewrite HEmp.
+    -- now apply is_empty_2.
+  - destruct (M.is_empty (shift lb k t)) eqn:HEmp'.
+    -- rewrite shift_Empty_spec in HEmp'.
+       + now rewrite HEmp in *.
+       + apply is_empty_2 in HEmp'. 
+         now rewrite <- shift_Empty_iff in HEmp'.
     -- f_equal; now apply shift_max_spec.
 Qed.  
 
@@ -82,14 +90,16 @@ Module IsBdlLvlMapLVL
 Include IsLvlMapLVL Data M MO.
 Import MO OP.P.
 
-Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
+Lemma shift_valid_refl (lb k : Lvl.t) (t : t) : valid lb t -> eq (shift lb k t) t.
 Proof.
-  intros; induction t0 using map_induction.
+  induction t using map_induction; intro Hvt.
   - now apply shift_Empty_spec.
-  - unfold Add in H1; rewrite H1 in *.
-    rewrite valid_add_notin_spec in H; auto; destruct H.
-    rewrite shift_add_notin_spec; auto. rewrite IHt0_1; auto.
-    rewrite Level.shift_valid_refl; auto; reflexivity.
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    rewrite <- valid_add_iff in Hvt. 
+    destruct Hvt as [Hvx Hvt].
+    rewrite shift_add_spec.
+    rewrite IHt1; auto.
+    now rewrite Level.shift_valid_refl; auto.
 Qed.
     
 End IsBdlLvlMapLVL.

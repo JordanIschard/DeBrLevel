@@ -20,7 +20,7 @@ Module Type IsLvlMapDInterface
 Include IsLvl MO.
 Import MO OP.P.
 
-(** **** extra [valid] property *)
+(** *** extra [valid] property *)
 Section valid.
 
 Variable lb : Lvl.t.
@@ -44,7 +44,7 @@ Parameter valid_find_spec : valid lb m -> M.find x m = Some v -> Data.valid lb v
 
 End valid.
 
-(** **** extra [shift] function property *)
+(** *** extra [shift] function property *)
 Section shift.
 
 Variable lb k k' : Lvl.t.
@@ -109,7 +109,7 @@ Module Type IsLvlMapKInterface
 Include IsLvl MO.
 Import MO OP.P.
 
-(** **** extra [valid] property *)
+(** *** extra [valid] property *)
 Section valid.
 
 Variable lb : Lvl.t.
@@ -119,20 +119,21 @@ Variable m m' : t.
 
 
 Parameter valid_Empty_spec : Empty m -> valid lb m.
+Parameter valid_Empty_iff : Empty m -> valid lb m <-> True.
 Parameter valid_empty_spec : valid lb M.empty.
 
 
-Parameter valid_add_iff : forall m x (v : Data.t) lb,
+Parameter valid_add_iff :
   Key.valid lb x /\ valid lb m <-> valid lb (M.add x v m).
 Parameter valid_add_in_spec : M.In x m -> valid lb m -> exists v, valid lb (M.add x v m).
-Parameter valid_Add_iff : (* ~ M.In x m -> *) Add x v m m' ->  
+Parameter valid_Add_iff : Add x v m m' ->  
   (Key.valid lb x /\ valid lb m <-> valid lb m').
 
 Parameter valid_in_spec : valid lb m -> M.In x m -> Key.valid lb x.
 
 End valid.
 
-(** **** extra [shift] function property *)
+(** *** extra [shift] function property *)
 Section shift.
 
 Variable lb k k' : Lvl.t.
@@ -194,7 +195,7 @@ Module Type IsLvlMapKDInterface
 Include IsLvl MO.
 Import MO OP.P.
 
-(** **** extra [valid] property *)
+(** *** extra [valid] property *)
 Section valid.
 
 Variable lb : Lvl.t.
@@ -203,8 +204,10 @@ Variable v : Data.t.
 Variable m m' : t.
 
 Parameter valid_Empty_spec : Empty m -> valid lb m.
+Parameter valid_Empty_iff : Empty m -> valid lb m <-> True.
+Parameter valid_empty_spec : valid lb M.empty.
 
-Parameter valid_add_spec : forall m x v lb,
+Parameter valid_add_spec :
   Key.valid lb x /\ Data.valid lb v /\ valid lb m -> valid lb (M.add x v m).
 Parameter valid_add_notin_spec : ~ M.In x m -> 
   valid lb (M.add x v m) <-> Key.valid lb x /\ Data.valid lb v /\ valid lb m.
@@ -221,7 +224,7 @@ Parameter valid_in_spec : valid lb m -> M.In x m -> Key.valid lb x.
 
 End valid.
 
-(** **** extra [shift] function property *)
+(** *** extra [shift] function property *)
 Section shift.
 
 Variable lb k k' : Lvl.t.
