@@ -17,6 +17,13 @@ Definition Submap (m m' : t) :=
   (forall y, M.In y m -> M.In y m') /\
   (forall k e e', M.MapsTo k e m -> M.MapsTo k e' m' -> e = e').
 
+(** **** ForAll property
+
+  MMaps does not provide a function that check if all elements in the environment satisfy a property [P]. Consequently we define it.
+*)
+Definition For_all (P : Key.t -> Data.t -> Prop) (m : t) := 
+  forall k d, M.find k m = Some d -> P k d.
+
 
 (** ** [Equivalence] property *)
 
@@ -277,6 +284,68 @@ Qed.
 
 #[export] Instance Submap_po : PreOrder Submap.
 Proof. split; try apply Submap_refl; apply Submap_trans. Qed.
+
+
+(** ** [For_all] property *)
+Section For_all.
+
+
+#[export] Instance For_all_proper (P : Key.t -> Data.t -> Prop) : 
+  Proper (eq ==> iff) (For_all P).
+Proof.
+  intros o o' Heqo; unfold For_all; split; intros HFa k d Hfi.
+  - rewrite <- Heqo in Hfi; auto.
+  - rewrite Heqo in Hfi; auto.
+Qed.
+
+Lemma For_all_empty_spec (P : Key.t -> Data.t -> Prop) : For_all P M.empty.
+Proof. 
+  intros k d Hfi.
+  apply find_2 in Hfi.
+  apply empty_mapsto_iff in Hfi; contradiction.
+Qed.
+
+Lemma For_all_Empty_spec (o : t) (P : Key.t -> Data.t -> Prop) :
+  Empty o -> For_all P o.
+Proof.
+  intros HEmp k d Hfi; apply Empty_eq_spec in HEmp.
+  rewrite HEmp in Hfi.
+  apply find_2 in Hfi.
+  apply empty_mapsto_iff in Hfi; contradiction.
+Qed.
+
+Lemma For_all_add_spec 
+  (o : t) (k : Key.t) (d : Data.t) (P : Key.t -> Data.t -> Prop) :
+ P k d /\ For_all P o -> For_all P (M.add k d o).
+Proof.
+  intros [HP HFa] k' d' Hfi.
+  destruct (Key.eq_dec k k') as [Heq | Hneq]; subst.
+  - rewrite add_eq_o in Hfi; auto.
+    inversion Hfi; subst.
+    apply Key.eq_leibniz in Heq; now subst.
+  - rewrite add_neq_o in Hfi; auto.
+Qed.
+
+Lemma For_all_add_notin_spec 
+  (o : t) (k : Key.t) (d : Data.t) (P : Key.t -> Data.t -> Prop) :
+ ~ M.In k o ->
+ ((P k d /\ For_all P o) <-> For_all P (M.add k d o)).
+Proof.
+  intro HnIn; split.
+  - apply For_all_add_spec.
+  - intro HFa; split.
+    -- apply HFa.
+       now rewrite add_eq_o.
+    -- intros k' d' Hfi. 
+       destruct (Key.eq_dec k k') as [Heq | Hneq]; subst.
+       + exfalso; apply HnIn.
+         rewrite Heq.
+         exists d'; now apply find_2.
+       + apply HFa.
+         now rewrite add_neq_o.
+Qed.
+
+End For_all.
 
 End MapET.
 

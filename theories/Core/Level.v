@@ -11,193 +11,200 @@ Module Level <: IsBdlLvlFullOTWL.
 
 Include Lvl.
 
-(** *** Definition *)
+(** *** Definitions *)
 
-Definition shift (lb : Lvl.t) (k : Lvl.t) (v : t) := if (lb <=? v)%nat then v + k else v.
+Definition shift (m: Lvl.t) (k: Lvl.t) (t: t) := if (m <=? t)%nat then t + k else t.
 
-Definition valid (lb : Lvl.t) (v : t) := Lvl.lt v lb.
+Definition Wf (m: Lvl.t) (t: t) := Lvl.lt t m.
 
-Definition validb (lb : Lvl.t) (v : t) := Lvl.ltb v lb.
+Definition is_wf (m: Lvl.t) (t: t) := Lvl.ltb t m.
 
-(** *** Equality *)
-Section equality.
+(** *** Properties *)
 
-Lemma eq_leibniz : forall x y, eq x y -> x = y. 
+(** **** [lt] and [eq] properties *)
+Section lt_eq.
+
+Variable t1 t2 : t.
+
+Lemma eq_leibniz : eq t1 t2 -> t1 = t2. 
 Proof. auto. Qed.
 
-End equality.
-
-(** *** Strict order between levels *)
-Section lt.
-
-Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y. 
+Lemma lt_not_eq : lt t1 t2 -> ~ eq t1 t2. 
 Proof. intros; lia. Qed.
 
-Lemma gt_neq_nlt : forall x y, ~ eq x y -> ~ lt x y -> lt y x.
+Lemma gt_neq_nlt : ~ eq t1 t2 -> ~ lt t1 t2 -> lt t2 t1.
 Proof. intros; lia. Qed.
 
-End lt.
+End lt_eq.
 
-(** *** [shift] property *)
+(** **** [shift] properties *)
 Section shift.
 
-Variable lb lb' k k' : Lvl.t.
+Variable m n k p : Lvl.t.
 Variable t t1 : t.
 
-#[export]
-Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
-Proof. repeat red; intros; subst; now rewrite H1. Qed.
+#[export] Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift := _.
 
 Lemma shift_neq :
-  t <> t1 -> (shift lb k t) <> (shift lb k t1).
+  t <> t1 -> (shift m k t) <> (shift m k t1).
 Proof.
-  intros; unfold shift. destruct (Nat.leb_spec0 lb t); destruct (Nat.leb_spec0 lb t1); lia.
+  intro Hneq; unfold shift.
+  destruct (Lvl.leb_spec0 m t); destruct (Lvl.leb_spec0 m t1); lia.
 Qed.
 
 Lemma shift_neq_1 :
-  (shift lb k t) <> (shift lb k t1) -> t <> t1.
+  (shift m k t) <> (shift m k t1) -> t <> t1.
 Proof.
-  intros; unfold shift in H. destruct (Nat.leb_spec0 lb t); 
-  destruct (Nat.leb_spec0 lb t1); lia.
+  intros Hneq Heq; subst.
+  now apply Hneq.
 Qed.
 
 Lemma shift_eq_iff :
-  t = t1 <-> (shift lb k t) = (shift lb k t1).
+  t = t1 <-> (shift m k t) = (shift m k t1).
 Proof.
-  split; subst; auto. intros; unfold shift in H. 
-  destruct (Nat.leb_spec0 lb t); destruct (Nat.leb_spec0 lb t1); lia.
+  split; intro Heq.
+  - subst; reflexivity.
+  - unfold shift in Heq.
+    destruct (Lvl.leb_spec0 m t); destruct (Lvl.leb_spec0 m t1); lia.
 Qed.
 
-Lemma shift_zero_refl : shift lb 0 t = t.
-Proof.
-  unfold shift; destruct (Nat.leb_spec0 lb t); auto.
-Qed.
-
-Lemma shift_valid_refl : valid lb t -> shift lb k t = t.
+Lemma shift_zero_refl : shift m 0 t = t.
 Proof. 
-  unfold shift,valid; intros Hvt. destruct (Nat.leb_spec0 lb t); auto.
-  lia.
+  unfold shift; destruct (Lvl.leb_spec0 m t); auto.
 Qed.
 
-Lemma shift_trans : shift lb k (shift lb k' t) = shift lb (k + k') t.
+Lemma shift_wf_refl : Wf m t -> shift m k t = t.
 Proof.
-  unfold shift; destruct (Nat.leb_spec0 lb t); auto.
-  - assert (lb <= (t + k'))%nat; try lia.
-    rewrite <- Nat.leb_le in H; rewrite H; lia.
-  - rewrite <- Nat.leb_nle in n; rewrite n; reflexivity. 
+  unfold shift, Wf; intro Hlt. 
+  destruct (Lvl.leb_spec0 m t); auto; lia.
+Qed.
+
+Lemma shift_trans : shift m k (shift m p t) = shift m (k + p) t.
+Proof.
+  unfold shift; destruct (Lvl.leb_spec0 m t) as [Hle | Hgt]; auto.
+  - assert (Hle': (m <= (t + p))%nat) by lia.
+    rewrite <- Lvl.leb_le in Hle'; rewrite Hle'; lia.
+  - rewrite <- Lvl.leb_nle in Hgt; rewrite Hgt; reflexivity. 
 Qed.
 
 Lemma shift_permute :
-  shift lb k (shift lb k' t) = shift lb k' (shift lb k t).
+  shift m k (shift m p t) = shift m p (shift m k t).
 Proof.
-  unfold shift; destruct (Nat.leb_spec0 lb t).
-  - destruct (Nat.leb_spec0 lb (t + k')); 
-    destruct (Nat.leb_spec0 lb (t + k)); lia.
-  - rewrite <- Nat.leb_nle in n; now rewrite n.
+  unfold shift; destruct (m <=? t) eqn:Hle.
+  - rewrite Lvl.leb_le in Hle. 
+    destruct (Lvl.leb_spec0 m (t + p));
+    destruct (Lvl.leb_spec0 m (t + k)); lia.
+  - now rewrite Hle.
 Qed.
 
 Lemma shift_permute_1 : 
-  (shift lb k (shift lb k' t)) = (shift (lb + k) k' (shift lb k t)).
+  (shift m k (shift m p t)) = (shift (m + k) p (shift m k t)).
 Proof.
-  unfold shift; destruct (Nat.leb_spec0 lb t).
-  - replace (lb <=? t + k') with true; replace (lb + k <=? t + k) with true.
-    -- lia.
-    -- symmetry; rewrite Nat.leb_le; lia.
-    -- symmetry; rewrite Nat.leb_le; lia.
-    -- symmetry; rewrite Nat.leb_le; lia.
-  - replace (lb <=? t) with false; replace (lb + k <=? t) with false; try reflexivity;
-    symmetry; rewrite Nat.leb_nle; lia.
+  unfold shift; destruct (m <=? t) eqn:Hle.
+  - assert (Hle': m + k <=? t + k = true) by (rewrite Lvl.leb_le in *; lia).
+    assert (Hle'': m <=? t + p = true) by (rewrite Lvl.leb_le in *; lia).
+    rewrite Hle', Hle''; lia.
+  - rewrite Hle; rewrite Lvl.leb_nle in Hle.
+    destruct (m + k <=? t) eqn:Hle'; auto.
+    rewrite Lvl.leb_le in Hle'; lia.
 Qed.
 
 Lemma shift_permute_2 : 
-  lb <= lb' -> (shift lb k (shift lb' k' t)) = (shift (lb' + k) k' (shift lb k t)).
+  m <= n -> (shift m k (shift n p t)) = (shift (n + k) p (shift m k t)).
 Proof.
-  unfold shift; intros; destruct (Nat.leb_spec0 lb' t); destruct (Nat.leb_spec0 lb t).
-  - replace (lb <=? t + k') with true; replace (lb' + k <=? t + k) with true; try lia;
-    symmetry; rewrite Nat.leb_le; lia.
-  - replace (lb <=? t + k') with false; replace (lb' + k <=? t) with true; try reflexivity;
-    symmetry; try (rewrite Nat.leb_le; lia); rewrite Nat.leb_nle; lia.
-  - replace (lb' + k <=? t + k) with false; try reflexivity; symmetry; 
-    rewrite Nat.leb_nle; lia.
-  - replace (lb' + k <=? t) with false; try reflexivity; symmetry; rewrite Nat.leb_nle; lia.
+  unfold shift. intros; destruct (Lvl.leb_spec0 n t); destruct (Lvl.leb_spec0 m t).
+  - replace (m <=? t + p) with true; replace (n + k <=? t + k) with true; try lia;
+    symmetry; rewrite Lvl.leb_le; lia.
+  - replace (m <=? t + p) with false; replace (n + k <=? t) with true; try reflexivity;
+    symmetry; try (rewrite Lvl.leb_le; lia); rewrite Lvl.leb_nle; lia.
+  - replace (n + k <=? t + k) with false; try reflexivity; symmetry; 
+    rewrite Lvl.leb_nle; lia.
+  - replace (n + k <=? t) with false; try reflexivity; symmetry; rewrite Lvl.leb_nle; lia.
 Qed.
 
-Lemma shift_unfold : (shift lb (k + k') t) = (shift (lb + k) k' (shift lb k t)). 
+Lemma shift_unfold : (shift m (k + p) t) = (shift (m + k) p (shift m k t)). 
 Proof.
-  unfold shift; destruct (lb <=? t) eqn:Hleb.
-  - replace (lb + k <=? t + k) with true; try lia. symmetry; rewrite Nat.leb_le in *; lia.
-  - apply Nat.leb_nle in Hleb. destruct (Nat.leb_spec0 (lb + k) t); lia.
+  unfold shift; destruct (m <=? t) eqn:Hleb.
+  - replace (m + k <=? t + k) with true; try lia. symmetry; rewrite Lvl.leb_le in *; lia.
+  - apply Lvl.leb_nle in Hleb. destruct (Lvl.leb_spec0 (m + k) t); lia.
 Qed.
 
 Lemma shift_unfold_1 : forall k k1 k2 r,
   k <= k1 -> k1 <= k2 ->
   (shift k1 (k2 - k1) (shift k  (k1 - k) r)) = shift k (k2 - k) r.
 Proof.
-  unfold shift; intros; destruct (Nat.leb_spec0 k0 r).
-  -- destruct (Nat.leb_spec0 k1 (r + (k1 - k0))); lia.
-  -- destruct (Nat.leb_spec0 k1 r); auto; assert (r < k0) by lia; lia.
+  unfold shift; intros; destruct (Lvl.leb_spec0 k0 r).
+  -- destruct (Lvl.leb_spec0 k1 (r + (k1 - k0))); lia.
+  -- destruct (Lvl.leb_spec0 k1 r); auto; assert (r < k0) by lia; lia.
 Qed.
+
+Lemma shift_gt_iff : t > t1 <-> (shift m n t) > (shift m n t1).
+Proof.
+  unfold shift; split; intro Hgt;
+  destruct (leb_spec m t); 
+  destruct (leb_spec m t1); lia.
+Qed.
+
+Lemma shift_le : t <= (shift m n t).
+Proof. unfold shift; destruct (leb_spec m t); lia. Qed.
 
 End shift.
 
-(** *** [valid] property *)
+(** **** [Wf] property *)
 
-Lemma validb_valid : forall k t, validb k t = true <-> valid k t. 
+Lemma Wf_is_wf_true : forall k t, Wf k t <-> is_wf k t = true. 
 Proof.
-  split; intros; unfold valid,validb in *; now apply Nat.ltb_lt.
+  split; intros; unfold Wf,is_wf in *; now apply Lvl.ltb_lt.
 Qed.
 
-Lemma validb_nvalid : forall k t, validb k t = false <-> ~ valid k t.
+Lemma notWf_is_wf_false : forall k t, ~ Wf k t <-> is_wf k t = false.
 Proof.
-  split; intros; unfold valid,validb in *; now apply Nat.ltb_nlt.
+  split; intros; unfold Wf,is_wf in *; now apply Lvl.ltb_nlt.
 Qed. 
 
-#[export]
-Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
-Proof. repeat red; intros; subst; rewrite H0; split; auto. Qed.
+#[export] Instance Wf_iff : Proper (Logic.eq ==> eq ==> iff) Wf := _.
 
-Lemma validb_eq : Proper (Logic.eq ==> eq ==> Logic.eq) validb.
-Proof. repeat red; intros; subst; rewrite H0; split; auto. Qed.
+#[export] Instance is_wf_eq : Proper (Logic.eq ==> eq ==> Logic.eq) is_wf := _.
 
-Lemma valid_weakening : forall k k' t, (k <= k') -> valid k t -> valid k' t.
-Proof. unfold valid; intros k k' t Hleb Hvt; lia. Qed.
+Lemma Wf_weakening : forall k p t, (k <= p) -> Wf k t -> Wf p t.
+Proof. unfold Wf; intros k p t Hleb Hvt; lia. Qed.
 
-(** *** Interaction property between [valid] and [shift] *)
+(** *** Interaction property between [Wf] and [shift] *)
 
-Lemma shift_preserves_valid : forall k k' t, valid k t -> valid (k + k') (shift k k' t).
+Lemma shift_preserves_wf : forall k p t, Wf k t -> Wf (k + p) (shift k p t).
 Proof.
-  unfold valid,shift; intros k k' t Hvt; destruct (Nat.leb_spec0 k t); try lia.
+  unfold Wf,shift; intros k p t Hvt; destruct (Lvl.leb_spec0 k t); try lia.
 Qed.
 
-Lemma shift_preserves_valid_1 : forall lb k k' t, 
-  valid k t -> valid (k + k') (shift lb k' t).
+Lemma shift_preserves_wf_1 : forall m k p t, 
+  Wf k t -> Wf (k + p) (shift m p t).
 Proof.
-  unfold valid,shift; intros lb k k' t Hvt; destruct (Nat.leb_spec0 lb t); lia.
+  unfold Wf,shift; intros m k p t Hvt; destruct (Lvl.leb_spec0 m t); lia.
 Qed.
 
-Lemma shift_preserves_valid_gen : forall lb lb' k k' t,
-  k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> 
-  k' - k = lb' - lb -> 
-  valid lb t -> valid lb' (shift k (k' - k) t).
+Lemma shift_preserves_wf_gen : forall m n k p t,
+  k <= p -> m <= n -> k <= m -> p <= n -> 
+  p - k = n - m -> 
+  Wf m t -> Wf n (shift k (p - k) t).
 Proof.
-  intros lb lb' k; revert lb lb'; induction k; simpl; intros.
-  - unfold valid, shift in *. destruct t0; simpl; lia.
-  - unfold valid, shift in *; destruct t0; simpl; try lia.
-    destruct lb; try lia; destruct k'; try lia.
-    destruct lb'; try lia; simpl in *. apply le_S_n in H0,H,H1,H2.
+  intros m n k; revert m n; induction k; simpl; intros.
+  - unfold Wf, shift in *. destruct t0; simpl; lia.
+  - unfold Wf, shift in *; destruct t0; simpl; try lia.
+    destruct m; try lia; destruct p; try lia.
+    destruct n; try lia; simpl in *. apply le_S_n in H0,H,H1,H2.
     apply IHk with (t := t0) in H3; auto; try lia.
-    destruct (Nat.leb_spec0 k t0); simpl in *; lia.
+    destruct (Lvl.leb_spec0 k t0); simpl in *; lia.
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' t,
-  lb <= lb' -> valid lb t -> 
-  valid lb' (shift lb (lb' - lb) t).
-Proof. intros. eapply shift_preserves_valid_gen; eauto. Qed. 
+Lemma shift_preserves_wf_2 : forall m n t,
+  m <= n -> Wf m t -> 
+  Wf n (shift m (n - m) t).
+Proof. intros. eapply shift_preserves_wf_gen; eauto. Qed. 
 
-Lemma shift_preserves_valid_zero : forall k t, valid k t -> valid k (shift k 0 t).
+Lemma shift_preserves_wf_zero : forall k t, Wf k t -> Wf k (shift k 0 t).
 Proof. 
   intros; replace k with (k + 0); try lia;
-  now apply shift_preserves_valid_1. 
+  now apply shift_preserves_wf_1. 
 Qed. 
 
 End Level.

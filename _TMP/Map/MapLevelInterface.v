@@ -41,6 +41,8 @@ Parameter valid_add_spec :
   Data.valid lb v /\ valid lb m -> valid lb (M.add x v m).
 
 Parameter valid_find_spec : valid lb m -> M.find x m = Some v -> Data.valid lb v.
+Parameter valid_update_spec :
+  M.In x m -> valid lb m -> Data.valid lb v -> valid lb (M.add x v m).
 
 End valid.
 
@@ -154,6 +156,7 @@ Parameter shift_Add_iff : Add x v m m' <->
 Parameter shift_remove_spec : 
   eq (M.remove (Key.shift lb k x) (shift lb k m)) (shift lb k (M.remove x m)).
 
+Parameter shift_in_e_spec : M.In x (shift lb k m) -> exists (x' : Key.t), x = Key.shift lb k x'.
 Parameter shift_in_iff :  M.In x m <-> M.In (Key.shift lb k x) (shift lb k m).
 Parameter shift_notin_iff : ~ M.In x m <-> ~ M.In (Key.shift lb k x) (shift lb k m).
 Parameter shift_find_spec :
@@ -167,8 +170,21 @@ End IsLvlMapKInterface.
 (** ** Bindless Leveled Map Interface - [LvlK/ETD] *)
 Module Type IsBdlLvlMapKInterface  
   (Key : IsBdlLvlOTWL) (Data : EqualityType) 
-  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvl MO
-:= IsLvlMapKInterface Key Data M MO <+ IsBindlessLeveledEx MO.
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvl MO.
+
+Include IsLvlMapKInterface Key Data M MO.
+Import MO OP.P.
+
+
+Parameter valid_in_iff : forall (m n : Lvl.t) (x : M.key) (t : t),
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+
+Parameter shift_find_valid_spec : forall (lb k : Lvl.t) (x : M.key) (m m' : t),
+  Key.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+Parameter shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
+
+End IsBdlLvlMapKInterface.
 
 (** ** Alternative Leveled Map Interface - [LvlK/ETD] *)
 Module Type IsLvlFullMapKInterface  
@@ -198,7 +214,7 @@ Import MO OP.P.
 (** *** extra [valid] property *)
 Section valid.
 
-Variable lb : Lvl.t.
+Variable lb k : Lvl.t.
 Variable x : M.key.
 Variable v : Data.t.
 Variable m m' : t.
@@ -221,6 +237,8 @@ Parameter valid_Add_spec : Add x v m m' ->
 Parameter valid_find_spec : 
   valid lb m -> M.find x m = Some v -> Key.valid lb x /\ Data.valid lb v.
 Parameter valid_in_spec : valid lb m -> M.In x m -> Key.valid lb x.
+Parameter valid_update_spec :
+  M.In x m -> valid lb m -> Data.valid lb v -> valid lb (M.add x v m).
 
 End valid.
 
@@ -246,6 +264,7 @@ Parameter shift_Add_iff : Add x v m m' <->
 Parameter shift_remove_spec : 
   eq (M.remove (Key.shift lb k x) (shift lb k m)) (shift lb k (M.remove x m)).
 
+Parameter shift_in_e_spec : M.In x (shift lb k m) -> exists (x' : Key.t), x = Key.shift lb k x'.
 Parameter shift_in_iff :  M.In x m <-> M.In (Key.shift lb k x) (shift lb k m).
 Parameter shift_notin_iff : ~ M.In x m <-> ~ M.In (Key.shift lb k x) (shift lb k m).
 
@@ -255,6 +274,11 @@ Parameter shift_find_iff :
 Parameter shift_find_e_spec :
   M.find (Key.shift lb k x) (shift lb k m) = Some v -> 
   exists v', Data.eq v (Data.shift lb k v').
+Parameter shift_find_e_spec_1 :
+  M.find x (shift lb k m) = Some v -> 
+  (exists x', Key.eq x (Key.shift lb k x')) /\ 
+  (exists v', Data.eq v (Data.shift lb k v')).
+
 
 End shift.
 
@@ -263,9 +287,20 @@ End IsLvlMapKDInterface.
 (** ** Bindless Leveled Map Interface - [LvlK/LvlD] *)
 Module Type IsBdlLvlMapKDInterface 
   (Key : IsBdlLvlOTWL) (Data : IsBdlLvlETWL) 
-  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvl MO
-:= IsLvlMapKDInterface Key Data M MO <+ IsBindlessLeveledEx MO.
+  (M : Interface.S Key) (MO : MapInterface Key Data M) <: IsBdlLvl MO.
 
+Include IsLvlMapKDInterface Key Data M MO.
+Import MO OP.P.
+
+Parameter valid_in_iff : forall (m n : Lvl.t) (x : M.key) (t : t),
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+
+Parameter shift_find_valid_spec : forall (lb k : Lvl.t) (x : M.key) (m m' : t),
+  Key.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+Parameter shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
+
+End IsBdlLvlMapKDInterface.
 
 (** ** Alternative Leveled Map Interface - [LvlK/LvlD] *)
 Module Type IsLvlFullMapKDInterface  
@@ -293,12 +328,25 @@ Import MO OP.P.
 
 Section props.
 
-Variable lb k : Lvl.t.
+Variable lb k n : Lvl.t.
 Variable m : t.
 
+Parameter valid_in_iff : forall (m n : Lvl.t) (x : M.key) (t : t),
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+
+Parameter shift_in_new_key : forall (n : Lvl.t) (x : M.key) (t : t),
+  M.In x (shift (new_key t) n t) <-> M.In x t.
+
+Parameter shift_find_valid_spec : forall (lb k : Lvl.t) (x : M.key) (m m' : t),
+  Level.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+
 Parameter shift_new_notin_spec : lb >= (new_key m) -> ~ M.In lb (shift lb k m).
-Parameter shift_new_spec : lb >= (new_key m) -> new_key (shift lb k m) = new_key m.
-Parameter shift_max_spec : lb >= (new_key m) -> max_key (shift lb k m) = max_key m.
+Parameter shift_new_refl_spec : lb >= (new_key m) -> new_key (shift lb k m) = new_key m.
+Parameter shift_max_refl_spec : lb >= (new_key m) -> max_key (shift lb k m) = max_key m.
+Parameter shift_max_key_gt_iff : max_key m > n <-> max_key (shift lb k m) > (Level.shift lb k n).
+Parameter shift_max_key_le_spec : max_key m <= max_key (shift lb k m).
+Parameter shift_new_key_le_spec : new_key m <= new_key (shift lb k m).
 
 End props.
 
@@ -331,12 +379,25 @@ Import MO OP.P.
 
 Section props.
 
-Variable lb k : Lvl.t.
+Variable lb k n : Lvl.t.
 Variable m : t.
 
+Parameter valid_in_iff : forall (m n : Lvl.t) (x : M.key) (t : t),
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+
+Parameter shift_find_valid_spec : forall (lb k : Lvl.t) (x : M.key) (m m' : t),
+  Level.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+  
+Parameter shift_in_new_key : forall (n : Lvl.t) (x : M.key) (t : t),
+  M.In x (shift (new_key t) n t) <-> M.In x t.
+
 Parameter shift_new_notin_spec : lb >= (new_key m) -> ~ M.In lb (shift lb k m).
-Parameter shift_new_spec : lb >= (new_key m) -> new_key (shift lb k m) = new_key m.
-Parameter shift_max_spec : lb >= (new_key m) -> max_key (shift lb k m) = max_key m.
+Parameter shift_new_refl_spec : lb >= (new_key m) -> new_key (shift lb k m) = new_key m.
+Parameter shift_max_refl_spec : lb >= (new_key m) -> max_key (shift lb k m) = max_key m.
+Parameter shift_max_key_gt_iff : max_key m > n <-> max_key (shift lb k m) > (Level.shift lb k n).
+Parameter shift_max_key_le_spec : max_key m <= max_key (shift lb k m).
+Parameter shift_new_key_le_spec : new_key m <= new_key (shift lb k m).
 
 End props.
 

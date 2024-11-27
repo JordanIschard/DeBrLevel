@@ -3,12 +3,14 @@ From DeBrLevel Require Import LevelInterface Level.
 
 (** * Implementation - Option 
 
-  Implementation of a leveled elements embedded in an optional type.
+  Implementation of k leveled elements embedded in an optional type. We use the notation [ET] when elements satisfy [Equality Type] module, [WL] when the embedded type has an equivalent equality to the one from Coq, [FL] when the embbeded type has boolean version of [Wf] and finally [BD] when elements does not contains binders associated to levels.
 *)
+
+(** ** Leveled Option Implementation - [ET] *)
 Module IsLvlOptET (E : IsLvlET) <: IsLvlET.
 
 
-(** *** Definition *)
+(** *** Definitions *)
 Section definition.
 
 Definition t := option E.t.
@@ -20,63 +22,59 @@ Definition eq (ot1 ot2 : t) :=
    | _ => False
   end.
 
-Definition shift (lb k : Level.t) (t : t) := 
-  option_map (E.shift lb k) t.
+Definition shift (m n: Lvl.t) (t : t) := 
+  option_map (E.shift m n) t.
 
-Definition valid (lb : Level.t) (t : t) := 
+Definition Wf (m : Level.t) (t : t) := 
   match t with
-   | Some t1 => E.valid lb t1
+   | Some t1 => E.Wf m t1
    | _ => True
   end.
 
 End definition.
 
-(** *** Equality *)
-Section equality.
+(** *** Properties *)
 
-#[export]
-Instance eq_refl : Reflexive eq. 
+(** **** [eq] properties *)
+
+#[export] Instance eq_refl : Reflexive eq. 
 Proof. 
   red; intros; destruct x; unfold eq; auto.
   reflexivity.
 Qed.
 
-#[export]
-Instance eq_sym  : Symmetric eq.
+#[export] Instance eq_sym  : Symmetric eq.
 Proof. 
   red; intros; destruct x,y; unfold eq in *; auto.
   now symmetry.
 Qed.
 
-#[export]
-Instance eq_trans : Transitive eq.
+#[export] Instance eq_trans : Transitive eq.
 Proof. 
   red; intros; destruct x,y,z; unfold eq in *; auto.
   - transitivity t1; auto.
   - inversion H.
 Qed.
 
-#[export]
-Instance eq_equiv : Equivalence eq.
-Proof. 
-  split.
-  - apply eq_refl.
-  - apply eq_sym.
-  - apply eq_trans.
-Qed.
+#[export] Program Instance eq_equiv : Equivalence eq.
 
-#[export]
-Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
+(** **** [shift] properties *)
+Section shift.
+
+Variable m n k p : Level.t.
+Variable t t1 : t.
+
+#[export] Instance shift_eq : Proper (Logic.eq ==> Logic.eq ==> eq ==> eq) shift.
 Proof.
   repeat red; intros; subst; destruct x1,y1; unfold eq in *;
   try (now inversion H1).
   unfold shift; simpl. now apply E.shift_eq.
 Qed.
 
-Lemma shift_eq_iff : forall lb k t t1, 
-  eq t t1 <-> eq (shift lb k t) (shift lb k t1).
+Lemma shift_eq_iff :
+  eq t t1 <-> eq (shift m n t) (shift m n t1).
 Proof.
-  split; intro Heq; destruct t0,t1; unfold eq in *;
+  split; intro Heq; destruct t,t1; unfold eq in *;
   try (now inversion Heq).
   - unfold shift; simpl.
     now apply E.shift_eq_iff.
@@ -84,54 +82,33 @@ Proof.
     now rewrite <- E.shift_eq_iff in Heq.
 Qed.
 
-#[export]
-Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
-Proof.
-  repeat red; intros; subst; destruct x0,y0;
-  unfold eq in *; try now inversion H0.
-  unfold valid; split; intros.
-  - eapply E.valid_eq; eauto.
-    -- reflexivity.
-    -- now symmetry.
-  - eapply E.valid_eq; eauto. reflexivity.
-Qed.
-
-
-End equality.
-
-(** *** Shift *)
-Section shift.
-
-Variable lb k k' k'' : Level.t.
-Variable t : t.
-
-Lemma shift_zero_refl : eq (shift lb 0 t) t.
+Lemma shift_zero_refl : eq (shift m 0 t) t.
 Proof.
   destruct t; unfold shift,eq; simpl; auto.
   apply E.shift_zero_refl. 
 Qed.
 
-Lemma shift_trans : eq (shift lb k (shift lb k' t)) (shift lb (k + k') t).
+Lemma shift_trans : eq (shift m n (shift m k t)) (shift m (n + k) t).
 Proof. 
   destruct t; unfold eq, shift; simpl; auto.
   apply E.shift_trans.
 Qed.
 
-Lemma shift_permute : eq (shift lb k (shift lb k' t)) (shift lb k' (shift lb k t)).
+Lemma shift_permute : eq (shift m n (shift m k t)) (shift m k (shift m n t)).
 Proof. 
   destruct t; unfold eq, shift; simpl; auto.
   apply E.shift_permute.
 Qed.
 
-Lemma shift_unfold : eq (shift lb (k + k') t) (shift (lb + k) k' (shift lb k t)). 
+Lemma shift_unfold : eq (shift m (n + k) t) (shift (m + n) k (shift m n t)). 
 Proof. 
   destruct t; unfold eq, shift; simpl; auto.
   apply E.shift_unfold.
 Qed.
 
 Lemma shift_unfold_1 :
-  k <= k' -> k' <= k'' -> 
-  eq (shift k' (k'' - k') (shift k  (k' - k) t)) (shift k (k'' - k) t).
+  n <= k -> k <= p -> 
+  eq (shift k (p - k) (shift n  (k - n) t)) (shift n (p - n) t).
 Proof.
   intros Hlt Hlt'; 
   destruct t; unfold eq, shift; simpl; auto.
@@ -140,62 +117,74 @@ Qed.
 
 End shift.
 
-(** *** Valid *)
-Section valid.
+(** **** [Wf] properties *)
 
-Lemma valid_weakening : forall k k' (t : t), 
-  (k <= k') -> valid k t -> valid k' t.
+
+#[export] Instance Wf_iff : Proper (Logic.eq ==> eq ==> iff) Wf.
 Proof.
-  intros k k' t Hle Hvt.
-  destruct t; unfold valid in *; simpl in *; auto.
-  apply (E.valid_weakening k k' _ Hle Hvt).
+  repeat red; intros; subst; destruct x0,y0;
+  unfold eq in *; try now inversion H0.
+  unfold Wf; split; intros.
+  - eapply E.Wf_iff; eauto.
+    -- reflexivity.
+    -- now symmetry.
+  - eapply E.Wf_iff; eauto. reflexivity.
 Qed.
 
-Lemma shift_preserves_valid : forall k k' t, 
-  valid k t -> valid (k + k') (shift k k' t).
+Lemma Wf_weakening (n k: Lvl.t) (t : t) : (n <= k) -> Wf n t -> Wf k t.
 Proof.
-  intros k k' t Hvt.
-  destruct t; unfold valid in *; simpl in *; auto.
-  apply (E.shift_preserves_valid k k' _ Hvt).
+  intros  Hle Hvt.
+  destruct t; unfold Wf in *; simpl in *; auto.
+  apply (E.Wf_weakening n k _ Hle Hvt).
 Qed.
 
-Lemma shift_preserves_valid_1 : forall lb k k' t, 
-  valid k t -> valid (k + k') (shift lb k' t).
+Lemma shift_preserves_wf (n k: Lvl.t) (t: t) : Wf n t -> Wf (n + k) (shift n k t).
 Proof.
-  intros lb k k' t Hvt.
-  destruct t; unfold valid in *; simpl in *; auto.
-  apply (E.shift_preserves_valid_1 lb k k' _ Hvt).
+  intro Hvt.
+  destruct t; unfold Wf in *; simpl in *; auto.
+  apply (E.shift_preserves_wf n k _ Hvt).
 Qed.
 
-Lemma shift_preserves_valid_gen : forall lb lb' k k' t,  
-  k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' ->
-  k' - k = lb' - lb ->  valid lb t -> valid lb' (shift k (k' - k) t).
+Lemma shift_preserves_wf_1 (m n k: Lvl.t) (t: t) : 
+  Wf n t -> Wf (n + k) (shift m k t).
 Proof.
-  intros lb lb' k k' t. intros.
-  destruct t; unfold valid in *; simpl in *; auto.
-  now apply (E.shift_preserves_valid_gen lb lb' k k').
+  intro Hvt.
+  destruct t; unfold Wf in *; simpl in *; auto.
+  apply (E.shift_preserves_wf_1 m n k _ Hvt).
 Qed.
 
-Lemma shift_preserves_valid_2 : forall lb lb' t, 
-  lb <= lb' -> valid lb t -> valid lb' (shift lb (lb' - lb) t).
-Proof.  intros. eapply shift_preserves_valid_gen; eauto. Qed.
+Lemma shift_preserves_wf_gen (m p n k: Lvl.t) (t: t) :  
+  n <= k -> m <= p -> n <= m -> k <= p ->
+  k - n = p - m ->  Wf m t -> Wf p (shift n (k - n) t).
+Proof.
+  intros.
+  destruct t; unfold Wf in *; simpl in *; auto.
+  now apply (E.shift_preserves_wf_gen m p n k).
+Qed.
 
-Lemma shift_preserves_valid_zero : forall k t,
-  valid k t -> valid k (shift k 0 t).
+Lemma shift_preserves_wf_2 (m p: Lvl.t) (t: t) : 
+  m <= p -> Wf m t -> Wf p (shift m (p - m) t).
+Proof.  intros. eapply shift_preserves_wf_gen; eauto. Qed.
+
+Lemma shift_preserves_wf_zero (n: Lvl.t) (t: t) :
+  Wf n t -> Wf n (shift n 0 t).
 Proof. 
-  intros; replace k with (k + 0); try lia; 
-  now apply shift_preserves_valid_1.
+  intros; replace n with (n + 0); try lia; 
+  now apply shift_preserves_wf_1.
 Qed.
-
-End valid.
 
 End IsLvlOptET.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET] and [WL] *)
 Module IsLvlOptETWL (E : IsLvlETWL) <: IsLvlETWL.
 
 Include IsLvlOptET E.
 
-Lemma eq_leibniz : forall x y, eq x y -> x = y.
+Lemma eq_leibniz (x y: t) : eq x y -> x = y.
 Proof. 
   intros; destruct x,y; unfold eq in *; 
   try now inversion H.
@@ -204,6 +193,11 @@ Qed.
 
 End IsLvlOptETWL.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET] and [FL] *)
 Module IsLvlFullOptET (E : IsLvlFullET) <: IsLvlFullET.
 
 Include IsLvlOptET E.
@@ -211,56 +205,56 @@ Include IsLvlOptET E.
 (** *** Definition *)
 Section definition.
 
-Definition validb (lb : Level.t) (t : t) := 
+Definition is_wf (m : Level.t) (t : t) := 
   match t with
-   | Some t1 => E.validb lb t1
+   | Some t1 => E.is_wf m t1
    | _ => true
   end.
 
 End definition.
 
-(** *** Equality *)
-Section equality.
-
-Lemma validb_eq : Proper (Logic.eq ==> eq ==> Logic.eq) validb.
-Proof.
-  repeat red; intros; destruct x0,y0; 
-  unfold eq, validb in *; subst;
-  try now inversion H0.
-  now apply E.validb_eq.
-Qed.
-
-End equality.
-
-(** *** Valid *)
+(** *** [is_wf] properties *)
 Section valid.
 
-Variable k : Level.t.
+Variable n : Level.t.
 Variable t : t.
 
-Lemma validb_valid : validb k t = true <-> valid k t.
+#[export] Instance is_wf_eq : Proper (Logic.eq ==> eq ==> Logic.eq) is_wf.
 Proof.
-  destruct t; unfold validb,valid.
-  - apply E.validb_valid.
+  repeat red; intros; destruct x0,y0; 
+  unfold eq, is_wf in *; subst;
+  try now inversion H0.
+  now apply E.is_wf_eq.
+Qed.
+
+Lemma Wf_is_wf_true : Wf n t <-> is_wf n t = true.
+Proof.
+  destruct t; unfold is_wf,Wf.
+  - apply E.Wf_is_wf_true.
   - split; now intros.
 Qed.
 
-Lemma validb_nvalid : validb k t = false <-> ~ valid k t.
+Lemma notWf_is_wf_false :  ~ Wf n t <-> is_wf n t = false.
 Proof.
   intros; rewrite <- not_true_iff_false; split; intros; intro.
-  - apply H; now rewrite validb_valid. 
-  - apply H; now rewrite <- validb_valid.
+  - apply H; now rewrite Wf_is_wf_true. 
+  - apply H; now rewrite <- Wf_is_wf_true.
 Qed. 
 
 End valid.
   
 End IsLvlFullOptET.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET], [WL] and [FL] *)
 Module IsLvlFullOptETWL (E : IsLvlFullETWL) <: IsLvlFullETWL.
 
 Include IsLvlFullOptET E.
 
-Lemma eq_leibniz : forall x y, eq x y -> x = y.
+Lemma eq_leibniz (x y: t) : eq x y -> x = y.
 Proof. 
   intros; destruct x,y; unfold eq in *; 
   try now inversion H.
@@ -269,23 +263,33 @@ Qed.
 
 End IsLvlFullOptETWL.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET] and [BD] *)
 Module IsBdlLvlOptET (E : IsBdlLvlET) <: IsBdlLvlET.
 
 Include IsLvlOptET E.
 
-Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
+Lemma shift_wf_refl : forall m n t, Wf m t -> eq (shift m n t) t.
 Proof.
-  intros lb k t Hvt; destruct t; unfold valid,eq; simpl in *; auto.
-  now apply E.shift_valid_refl.
+  intros m n t Hvt; destruct t; unfold Wf,eq; simpl in *; auto.
+  now apply E.shift_wf_refl.
 Qed.
   
 End IsBdlLvlOptET.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET], [BD] and [WL] *)
 Module IsBdlLvlOptETWL (E : IsBdlLvlETWL) <: IsBdlLvlETWL.
 
 Include IsBdlLvlOptET E.
 
-Lemma eq_leibniz : forall x y, eq x y -> x = y.
+Lemma eq_leibniz (x y: t) : eq x y -> x = y.
 Proof. 
   intros; destruct x,y; unfold eq in *; 
   try now inversion H.
@@ -294,24 +298,33 @@ Qed.
 
 End IsBdlLvlOptETWL.
 
+
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET], [BD] and [FL] *)
 Module IsBdlLvlFullOptET (E : IsBdlLvlFullET) <: IsBdlLvlFullET.
 
 Include IsLvlFullOptET E.
 
-Lemma shift_valid_refl : forall lb k t, valid lb t -> eq (shift lb k t) t.
+Lemma shift_wf_refl : forall m n t, Wf m t -> eq (shift m n t) t.
 Proof.
-  intros lb k t Hvt; destruct t; unfold valid,eq; simpl in *; auto.
-  now apply E.shift_valid_refl.
+  intros m n t Hvt; destruct t; unfold Wf,eq; simpl in *; auto.
+  now apply E.shift_wf_refl.
 Qed.
 
 End IsBdlLvlFullOptET.
 
 
+(** ---- *)
+
+
+(** ** Leveled Option Implementation - [ET], [BD], [FL] and [WL] *)
 Module IsBdlLvlFullOptETWL (E : IsBdlLvlFullETWL) <: IsBdlLvlFullETWL.
 
 Include IsBdlLvlFullOptET E.
 
-Lemma eq_leibniz : forall x y, eq x y -> x = y.
+Lemma eq_leibniz (x y: t) : eq x y -> x = y.
 Proof. 
   intros; destruct x,y; unfold eq in *; 
   try now inversion H.

@@ -443,7 +443,8 @@ Proof.
        inversion Hfm; subst.
        now exists e.
     -- rewrite add_neq_o in Hfm; auto.
-Qed.     
+Qed.   
+
 
 Lemma shift_eq_iff (lb k : Lvl.t) (m m1 : t) : 
   eq m m1 <-> eq (shift lb k m) (shift lb k m1).
@@ -464,6 +465,55 @@ Proof.
        rewrite Heq in HnIn.
        rewrite <- shift_in_iff in HnIn.
        now apply not_in_find.
+Qed.
+
+Lemma shift_in_e_spec (lb k : Lvl.t) (x : M.key) (m : t) : 
+  M.In x (shift lb k m) -> exists (x' : M.key), x = Key.shift lb k x'.
+Proof.
+  revert x; induction m using map_induction; intros y HIn.
+  - rewrite shift_Empty_spec in HIn; auto.
+    exfalso; destruct HIn as [v HM]; now apply (H y v).
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec in HIn.
+    apply add_in_iff in HIn as [Heq | Hneq]; auto.
+    exists x. 
+    apply Key.eq_leibniz in Heq.  
+    now rewrite Heq.
+Qed.
+
+Lemma shift_find_e_spec_1 (m n : Lvl.t) (x : M.key) (d : Data.t) (o : t) :
+  M.find x (shift m n o) = Some d -> 
+  (exists x', Key.eq x (Key.shift m n x')) /\ (exists d', (Data.eq d (Data.shift m n d'))).
+Proof.
+  intro Hfi.
+  assert (HIn : M.In x (shift m n o)). { now exists d; apply find_2. }
+  apply shift_in_e_spec in HIn; split; auto;
+  destruct HIn as [x' Heq]; subst.
+  - now exists x'.
+  - now apply shift_find_e_spec in Hfi.
+Qed.
+
+Lemma valid_update_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
+  M.In x m -> valid lb m -> Data.valid lb v -> valid lb (M.add x v m).
+Proof.
+  revert x v; induction m using map_induction; intros y v HIn Hvo Hvd.
+  - apply Empty_eq_spec in H; rewrite H in *.
+    inversion HIn.
+    apply empty_mapsto_iff in H0; contradiction.
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    apply valid_add_notin_spec in Hvo as [Hvx [Hve Hvm1]]; auto.
+    apply add_in_iff in HIn as [Heq | HIn]; subst.
+    -- rewrite Heq in *. 
+       rewrite add_shadow.
+       rewrite valid_add_notin_spec; auto.
+       repeat split; auto.
+       now eapply Key.valid_eq; eauto.
+    -- destruct (Key.eq_dec y x) as [Heq| Hneq].
+       + rewrite Heq in *. contradiction.
+       + rewrite add_add_2; auto.
+         eapply IHm1 in Hvm1; eauto.
+         rewrite valid_add_notin_spec; auto.
+         rewrite add_in_iff; intros [Hc | Hc]; subst; contradiction.
 Qed.
 
 Lemma shift_Add_iff (lb k : Lvl.t) (key : Key.t) (v : Data.t) (m m' : t) :
@@ -660,6 +710,28 @@ Module IsBdlLvlMapKD
 Include IsLvlMapKD Key Data M MO.
 Import MO OP.P.  
 
+Lemma valid_in_iff (m n : Lvl.t) (x : M.key) (t : t) :
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+Proof.
+  revert x; induction t using map_induction; intros y Hvo; split; intro HIn.
+  - rewrite shift_Empty_spec in HIn; auto.
+  - rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0 in *; clear H0. 
+    apply valid_add_notin_spec in Hvo as [Hvk [Hvd Hv]]; auto.
+    rewrite shift_add_notin_spec in HIn; auto.
+    rewrite add_in_iff in *; destruct HIn as [Heq | HIn]; subst.
+    -- left; rewrite <- Heq. 
+       now rewrite Key.shift_valid_refl; auto.
+    -- right. rewrite <- IHt1; eauto.
+  - unfold Add in *; rewrite H0 in *; clear H0. 
+    apply valid_add_notin_spec in Hvo as [Hvk [Hvd Hv]]; auto.
+    rewrite shift_add_notin_spec; auto.
+    rewrite add_in_iff in *; destruct HIn as [Heq | HIn]; subst.
+    -- left; rewrite <- Heq. 
+       now rewrite Key.shift_valid_refl; auto.
+    -- right. rewrite IHt1; eauto.
+Qed.
+
 Lemma shift_valid_refl (lb k : Lvl.t) (t : t) : valid lb t -> eq (shift lb k t) t.
 Proof.
   induction t using map_induction; intro Hvt.
@@ -672,6 +744,19 @@ Proof.
     eapply Data.shift_valid_refl in Hve.
     apply Data.eq_leibniz in Hve. 
     now rewrite Hve.
+Qed.
+
+Lemma shift_find_valid_spec (lb k : Lvl.t) (x : M.key) (m m' : t) :
+  Key.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+Proof.
+  intros Hvk HIn Hfi. 
+  destruct HIn as [v HfV]; apply find_1 in HfV.
+  rewrite <- (Key.shift_valid_refl lb k x); auto.
+  apply (shift_find_iff lb k) in HfV as HfV1.
+  rewrite HfV1; symmetry.
+  rewrite <- shift_find_iff.
+  now rewrite <- Hfi.
 Qed.
 
 End IsBdlLvlMapKD.

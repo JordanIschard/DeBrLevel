@@ -278,7 +278,7 @@ Fixpoint substitution (k : Lvl.t) (x : L.t) (v e: Lambda.t) :=
     | ⟨(\,e1)⟩ => tm_abs (substitution k x ([⧐ k ~ 1] v) e1)
   end.
 
-Notation "'[' x ':=' v '~' k ']' t" := (substitution k x v t) (in custom lc at level 30, 
+Notation "'[' x ':=' v '⫣' k ']' t" := (substitution k x v t) (in custom lc at level 30, 
                                                       t custom lc at level 40, right associativity).
 
 (** *** Definition of a small operational semantics *)
@@ -289,7 +289,7 @@ Reserved Notation "k '⊨' t '⟼' t1" (at level 57, t custom lc,
 Inductive sos : Lvl.t -> Lambda.t -> Lambda.t -> Prop :=
   | sos_beta : forall k e1 e2,
                       (*--------------------------------------*)
-                         k ⊨ ((\,e1) e2) ⟼ [k := e2 ~ k] e1
+                         k ⊨ ((\,e1) e2) ⟼ [k := e2 ⫣ k] e1
 
   | sos_app_l : forall k e1 e1' e,
                              k ⊨ e1 ⟼ e1' ->

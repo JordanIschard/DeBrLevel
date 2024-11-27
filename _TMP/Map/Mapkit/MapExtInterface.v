@@ -18,6 +18,7 @@ Definition eq := @M.Equal Data.t.
 #[export] Declare Instance eq_equiv : Equivalence eq.
 
 Parameter Submap : t -> t -> Prop. 
+Parameter For_all : (Key.t -> Data.t -> Prop) -> t -> Prop.
 
 Section property.
 
@@ -73,6 +74,20 @@ Parameter Submap_find_spec : Submap m m' -> M.find x m = Some e -> M.find x m' =
 #[export] Declare Instance Submap_trans : Transitive Submap.
 #[export] Declare Instance Submap_eq : Proper (eq ==> eq ==> iff) Submap.
 #[export] Declare Instance Submap_po : PreOrder Submap.
+
+(** ** [For_all] property *)
+
+Hypothesis P : Key.t -> Data.t -> Prop. 
+
+
+Parameter For_all_empty_spec : For_all P M.empty.
+Parameter For_all_Empty_spec : Empty m -> For_all P m.
+
+Parameter For_all_add_spec : P x e /\ For_all P m -> For_all P (M.add x e m).
+Parameter For_all_add_notin_spec :
+  ~ M.In x m -> ((P x e /\ For_all P m) <-> For_all P (M.add x e m)).
+
+#[export] Declare Instance For_all_proper : Proper (eq ==> iff) (For_all P).
 
 End property.
 
@@ -135,7 +150,7 @@ Parameter max_key_add_max_spec :
 (** *** [max_key] interaction properties with [In] property *)
 
 Parameter max_key_notin_spec : x > max_key m -> ~ M.In x m.
-Parameter  max_key_in_spec : M.In x m -> x <= (max_key m).
+Parameter max_key_in_spec : M.In x m -> x <= (max_key m).
 
 (** *** [max_key] interaction properties with [Submap] property *)
 
@@ -179,7 +194,7 @@ Parameter new_key_add_new_key_spec :
 (** *** [new_key] interaction properties with [In] property *)
 
 Parameter new_key_notin_spec : x >= new_key m -> ~ M.In x m.
-Parameter new_key_in_spec : forall (m : t) x, M.In x m -> x < new_key m.
+Parameter new_key_in_spec : M.In x m -> x < new_key m.
 
 (** *** [new_key] interaction properties with [Submap] property *)
 

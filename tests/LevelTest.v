@@ -9,7 +9,7 @@ Module L := Level.
 
 Definition l := L.t.
 Notation "'[⧐' lb '~' k ']' t" := (L.shift lb k t) (at level 30, right associativity).
-Infix "⊢" := L.valid (at level 20, no associativity). 
+Infix "⊢" := L.Wf (at level 20, no associativity). 
 
 (** ** Test [shift] function *)
 
@@ -54,25 +54,25 @@ Compute 3 ⊢ 3.
 (** *** Playing with properties *)
 
 (** A level cannot be valid by itself. *)
-Example test_valid_1 n: ~ n ⊢ n.
+Example test_wf_1 n: ~ n ⊢ n.
 Proof. intro c. compute in c. lia. Qed.
 
 (** The property can be weakened. *)
-Example test_valid_2 k n m: 
+Example test_wf_2 k n m: 
   m <= n -> m ⊢ k -> n ⊢ k.
 Proof. 
   intros Hle Hvk. 
-  apply (L.valid_weakening m n k Hle Hvk).
+  apply (L.Wf_weakening m n k Hle Hvk).
 Qed.
 
 (** ** Test interaction between [shift] and [valid] *)
 
 (** Shifting preserves validity *)
-Example test_shift_valid_1 n: 3 ⊢ n -> 5 ⊢ [⧐ 3 ~ 2] n.
+Example test_shift_wf_1 n: 3 ⊢ n -> 5 ⊢ [⧐ 3 ~ 2] n.
 Proof.
   intro Hvn.
   replace 5 with (3 + 2) by lia.
-  apply (L.shift_preserves_valid_1 _ 3 2 n Hvn).
+  apply (L.shift_preserves_wf_1 _ 3 2 n Hvn).
 Qed.
 
 (** 
@@ -80,10 +80,10 @@ Qed.
   a shifting with a lower greater or equals to the level of validity
   does not change the elements.
 *)
-Example test_shift_valid_2: 
+Example test_shift_wf_2: 
   4 ⊢ 3 -> forall (n m: l), 4 <= n -> [⧐ n ~ m] 3 = 3.
 Proof.
   intros Hv3 n m Hle.
-  apply (L.shift_valid_refl n  m 3).
-  apply (L.valid_weakening 4 n 3 Hle Hv3).
+  apply (L.shift_wf_refl n  m 3).
+  apply (L.Wf_weakening 4 n 3 Hle Hv3).
 Qed.

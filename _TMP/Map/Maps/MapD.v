@@ -196,6 +196,26 @@ Proof.
     inversion Hfi; now subst.
 Qed. 
 
+Lemma valid_update_spec (lb : Lvl.t) (x : Key.t) (v : Data.t) (m : t) :
+  M.In x m -> valid lb m -> Data.valid lb v -> valid lb (M.add x v m).
+Proof.
+  revert x v; induction m using map_induction; intros y v HIn Hvo Hvd.
+  - apply Empty_eq_spec in H; rewrite H in *.
+    inversion HIn.
+    apply empty_mapsto_iff in H0; contradiction.
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    apply valid_add_notin_spec in Hvo as [Hve Hvo1]; auto.
+    apply add_in_iff in HIn as [Heq | HIn]; subst.
+    -- rewrite Heq in *. 
+       rewrite add_shadow.
+       rewrite valid_add_notin_spec; auto.
+    -- destruct (Key.eq_dec y x) as [Heq| Hneq].
+       + rewrite Heq in *. contradiction.
+       + rewrite add_add_2; auto.
+         eapply IHm1 in Hvo1; eauto.
+         rewrite valid_add_notin_spec; auto.
+         rewrite add_in_iff; intros [Hc | Hc]; subst; contradiction.
+Qed.
 
 (** *** extra [shift] property *)
 

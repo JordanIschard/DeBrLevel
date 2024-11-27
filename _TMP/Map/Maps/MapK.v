@@ -393,6 +393,20 @@ Proof.
   - now rewrite <- shift_in_iff.
 Qed.
 
+Lemma shift_in_e_spec (lb k : Lvl.t) (x : M.key) (m : t) : 
+  M.In x (shift lb k m) -> exists (x' : M.key), x = Key.shift lb k x'.
+Proof.
+  revert x; induction m using map_induction; intros y HIn.
+  - rewrite shift_Empty_spec in HIn; auto.
+    exfalso; destruct HIn as [v HM]; now apply (H y v).
+  - unfold Add in H0; rewrite H0 in *; clear H0.
+    rewrite shift_add_spec in HIn.
+    apply add_in_iff in HIn as [Heq | Hneq]; auto.
+    exists x. 
+    apply Key.eq_leibniz in Heq.  
+    now rewrite Heq.
+Qed.
+
 Lemma shift_eq_iff (lb k : Lvl.t) (m m1 : t) : 
   eq m m1 <-> eq (shift lb k m) (shift lb k m1).
 Proof.
@@ -583,6 +597,28 @@ Module IsBdlLvlMapK  (Key : IsBdlLvlOTWL)
 Include IsLvlMapK Key Data M MO.
 Import MO OP.P.  
 
+Lemma valid_in_iff (m n : Lvl.t) (x : M.key) (t : t) :
+  valid m t -> M.In x (shift m n t) <-> M.In x t.
+Proof.
+  revert x; induction t using map_induction; intros y Hvo; split; intro HIn.
+  - rewrite shift_Empty_spec in HIn; auto.
+  - rewrite shift_Empty_spec; auto.
+  - unfold Add in *; rewrite H0 in *; clear H0. 
+    apply valid_add_notin_spec in Hvo as [Hvk Hv]; auto.
+    rewrite shift_add_notin_spec in HIn; auto.
+    rewrite add_in_iff in *; destruct HIn as [Heq | HIn]; subst.
+    -- left; rewrite <- Heq. 
+       now rewrite Key.shift_valid_refl; auto.
+    -- right. rewrite <- IHt1; eauto.
+  - unfold Add in *; rewrite H0 in *; clear H0. 
+    apply valid_add_notin_spec in Hvo as [Hvk Hv]; auto.
+    rewrite shift_add_notin_spec; auto.
+    rewrite add_in_iff in *; destruct HIn as [Heq | HIn]; subst.
+    -- left; rewrite <- Heq. 
+       now rewrite Key.shift_valid_refl; auto.
+    -- right. rewrite IHt1; eauto.
+Qed.
+
 Lemma shift_valid_refl (lb k : Lvl.t) (t : t) : valid lb t -> eq (shift lb k t) t.
 Proof.
   induction t using map_induction; intro Hvt.
@@ -593,6 +629,16 @@ Proof.
     destruct Hvt as [Hvx Hvt].
     rewrite IHt1; auto. 
     now rewrite Key.shift_valid_refl; auto.
+Qed.
+
+Lemma shift_find_valid_spec (lb k : Lvl.t) (x : M.key) (m m' : t) :
+  Key.valid lb x -> M.In x m ->
+  M.find x m = M.find x m' -> M.find x (shift lb k m) = M.find x (shift lb k m').
+Proof.
+  intros Hvk HIn Hfi. 
+  destruct HIn as [v HfV]; apply find_1 in HfV.
+  rewrite <- (Key.shift_valid_refl lb k x); auto.
+  now do 2 rewrite <- (shift_find_spec lb k).
 Qed.
 
 End IsBdlLvlMapK.
