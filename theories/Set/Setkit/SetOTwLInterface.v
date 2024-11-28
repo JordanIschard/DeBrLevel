@@ -1,81 +1,83 @@
 From Coq Require Import MSets Classical_Prop.
 
+(** * Interface - [MSet] extension *)
 
-Module Type SetOTWithLeibnizInterface (T : MSetList.OrderedTypeWithLeibniz) <: Structures.Orders.OrderedType <: MSetList.SWithLeibniz.
+(** ** Extension of [MSet] *)
+Module Type SetOTWithLeibnizInterface (T : MSetList.OrderedTypeWithLeibniz) 
+            <: Structures.Orders.OrderedType <: MSetList.SWithLeibniz.
 
+Include MSetList.MakeWithLeibniz T.
+Include MSetProperties.WPropertiesOn T.
 
-  Include MSetList.MakeWithLeibniz T.
-  Include MSetProperties.WPropertiesOn T.
+(** *** Definitions *)
+Parameter ltb :  t -> t -> bool.
+Parameter map : (elt -> elt) -> t -> t.
 
-  Section definition.
+(** *** Specifications *)
+Section specs.
 
-    Parameter ltb :  t -> t -> bool.
-    Parameter map : (elt -> elt) -> t -> t.
+Variable x y : elt.
+Variable s s' : t.
 
-  End definition.
+(** **** Some facts *)
 
-  Section fact.
+Parameter Add_inv : Add x s s' -> add x s = s'.
 
-    Parameter Add_inv : forall x (s s' : t), Add x s s' -> add x s = s'.
-    #[global]
-    Declare Instance proper_1 : forall f,
-      Proper (T.eq ==> eq ==> eq) (fun (r0 : elt) (acc : t) => add (f r0) acc).
-    Parameter transpose_1 : forall f,
-      transpose eq (fun (r0 : elt) (acc : t) => add (f r0) acc).
+#[export] Declare Instance proper_1 : forall f,
+  Proper (T.eq ==> eq ==> eq) (fun (r0 : elt) (acc : t) => add (f r0) acc).
 
-  End fact.
+Parameter transpose_1 : forall f,
+ transpose eq (fun (r0 : elt) (acc : t) => add (f r0) acc).
 
-  Section equality.
+(** **** [eq] and [lt] specifications *)
 
-    Parameter eqb_refl : forall s, equal s s = true.
+Parameter eqb_refl : equal s s = true.
 
-    Parameter add_eq_leibniz : forall s s' v,
-      ~ In v s -> ~ In v s' -> s = s' <-> (add v s) = (add v s').
+Parameter add_eq_leibniz :
+  ~ In x s -> ~ In x s' -> s = s' <-> (add x s) = (add x s').
 
-  End equality.
+Parameter ltb_lt : ltb s s' = true <-> lt s s'.
 
-  Section lt.
+Parameter gt_neq_nlt : ~ eq s s' -> ~ lt s s' -> lt s' s.
 
-    Parameter ltb_lt : forall s s', ltb s s' = true <-> lt s s'.
-    Parameter gt_neq_nlt : forall s s', ~ eq s s' -> ~ lt s s' -> lt s' s.
+(** **** [In] specifications *)
 
-  End lt.
+Parameter diff_in_add_spec : In x s' -> (diff (add x s) s') = (diff s s').
 
-  Section in_set.
+Parameter union_add_spec : (union (add x s) s') =  add x (union s s').
 
-    Variable x : elt.
-    Variable s s' : t.
+Parameter inter_in_add_spec : In x s' -> (inter (add x s) s') = add x (inter s s').
 
-    Parameter diff_in_add_spec : In x s' -> (diff (add x s) s') = (diff s s').
-    Parameter union_add_spec : (union (add x s) s') =  add x (union s s').
-    Parameter inter_in_add_spec : In x s' -> (inter (add x s) s') = add x (inter s s').
+Parameter diff_notin_add_spec : ~ In x s' -> (diff (add x s) s') = add x (diff s s').
 
-  End in_set.
+Parameter inter_notin_add_spec : ~ In x s' -> (inter (add x s) s') =  (inter s s').
 
-  Section notin_set.
+Parameter add_notin_spec : ~ In x (add y s) <-> x <> y /\ ~ In x s.
 
-    Variable x r r' : elt.
-    Variable s s' s1 s2 : t.
+Parameter union_notin_spec : ~ In x (union s s') <-> ~ In x s /\ ~ In x s'.
 
-    Parameter diff_notin_add_spec : ~ In x s' -> (diff (add x s) s') = add x (diff s s').
-    Parameter inter_notin_add_spec : ~ In x s' -> (inter (add x s) s') =  (inter s s').
-    Parameter add_notin_spec : ~ In r (add r' s) <-> r <> r' /\ ~ In r s.
-    Parameter union_notin_spec : ~ In r (union s1 s2) <-> ~ In r s1 /\ ~ In r s2.
-    Parameter diff_notin_spec : ~ In r (diff s1 s2) <-> ~ In r s1 \/ In r s2.
-    Parameter singleton_notin_spec : ~ In r (singleton  r') <-> r <> r'.
+Parameter diff_notin_spec : ~ In x (diff s s') <-> ~ In x s \/ In x s'.
 
-  End notin_set.
+Parameter singleton_notin_spec : ~ In x (singleton  y) <-> x <> y.
 
-  Section map.
+(** **** [map] specifications *)
 
-    Parameter map_Empty_spec : forall f s, Empty s -> map f s = empty.
-    Parameter map_empty_spec : forall f, map f empty = empty.
-    Parameter map_singleton_spec : forall f re, map f (singleton re) = singleton (f re).
-    Parameter map_in_spec : forall s f re, In re s -> In (f re) (map f s).
-    Parameter map_add_notin_spec : forall f re s, ~ In re s -> map f (add re s) = add (f re) (map f s).
-    Parameter map_add_in_spec : forall f re s, In re s -> map f (add re s) = (map f s).
-    Parameter map_union_spec : forall s s' f, (map f (union s s')) = union (map f s) (map f s').
+Variable f : elt -> elt.
 
-  End map.
+Parameter map_Empty_spec : Empty s -> map f s = empty.
+
+Parameter map_empty_spec : map f empty = empty.
+
+Parameter map_singleton_spec : map f (singleton x) = singleton (f x).
+
+Parameter map_in_spec : In x s -> In (f x) (map f s).
+
+Parameter map_add_notin_spec : ~ In x s -> map f (add x s) = add (f x) (map f s).
+
+Parameter map_add_in_spec : In x s -> map f (add x s) = (map f s).
+
+Parameter map_union_spec : (map f (union s s')) = union (map f s) (map f s').
+
+End specs.
 
 End SetOTWithLeibnizInterface.

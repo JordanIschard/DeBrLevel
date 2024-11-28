@@ -46,31 +46,46 @@ Variable t t' : t.
 *)
 
 Parameter Wf_unfold : Wf m t <-> (For_all (T.Wf m) t).
+
 Parameter Wf_add_iff : Wf m (add v t) <-> T.Wf m v /\ Wf m t.
+
 Parameter Wf_empty : Wf m empty.
+
 Parameter Wf_union_iff : Wf m (union t t') <-> Wf m t /\ Wf m t'.
+
 Parameter Wf_singleton_iff : Wf m (singleton v) <-> T.Wf m v.
+
 Parameter Wf_in : Wf m t -> In v t -> T.Wf m v.
 
 (** **** [shift] specifications *)
 
 Parameter shift_Empty : Empty t -> shift m n t = empty.
+
 Parameter shift_empty : shift m n empty = empty.
+
 Parameter shift_singleton : shift m n (singleton v) = singleton (T.shift m n v).
+
 Parameter shift_union : shift m n (union t t') = union (shift m n t) (shift m n t').
+
 Parameter shift_inter : shift m n (inter t t') = inter (shift m n t) (shift m n t').
+
 Parameter shift_diff : shift m n (diff t t') = (diff (shift m n t) (shift m n t')).
 
 Parameter shift_add_notin :
   ~ In v t -> shift m n (add v t) = add (T.shift m n v) (shift m n t).
+
 Parameter shift_add_in : In v t -> shift m n (add v t) = (shift m n t).
+
 Parameter shift_add : shift m n (add v t) = add (T.shift m n v) (shift m n t).
+
 Parameter shift_remove : shift m n (remove v t) = remove (T.shift m n v)(shift m n t).
 
 Parameter shift_in_iff : In v t <-> In (T.shift m n v) (shift m n t).
+
 Parameter shift_in_e :
   In v (shift m n t) -> 
   exists v', v = (T.shift m n v') /\ In (T.shift m n v') (shift m n t).
+
 Parameter shift_notin_iff : ~ In v t <-> ~ In (T.shift m n v) (shift m n t).
 
 End specs.
@@ -88,6 +103,7 @@ Include IsLvlSetInterface T St.
 Import St.
 
 Parameter shift_wf_refl : forall (m n: Lvl.t) (t: t), Wf m t -> eq (shift m n t) t.
+
 Parameter Wf_in_iff : 
   forall (m k: Lvl.t) (n: elt) (t: t), Wf m t -> In n (shift m k t) <-> In n t.
 
@@ -132,9 +148,11 @@ Variable s s' : t.
 #[export] Declare Instance max_key_eq : Proper (eq ==> Logic.eq) max_key. 
 
 Parameter max_key_Empty : Empty s -> max_key s = 0.
+
 Parameter max_key_empty : max_key empty = 0.
 
 Parameter max_key_Add_max : Add v s s' -> max_key s' = max v (max_key s). 
+
 Parameter max_key_add_max : max_key (add v s) = max v (max_key s). 
 
 (** **** [new_key] specifications *)
@@ -142,9 +160,11 @@ Parameter max_key_add_max : max_key (add v s) = max v (max_key s).
 #[export] Declare Instance new_key_eq : Proper (eq ==> Logic.eq) new_key. 
 
 Parameter new_key_Empty : Empty s -> new_key s = 0.
+
 Parameter new_key_empty : new_key empty = 0.
 
 Parameter new_key_Add_max : Add v s s' -> new_key s' = max (S v) (new_key s). 
+
 Parameter new_key_add_max : new_key (add v s) = max (S v) (new_key s). 
 
 Parameter new_key_in_spec : In v s -> (v < new_key s)%nat.

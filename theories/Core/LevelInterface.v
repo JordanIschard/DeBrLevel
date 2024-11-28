@@ -62,15 +62,16 @@ Module Type IsWFFull (Import T : EqualityType) (Import V : IsWF T) <: IsWFb T.
 
 Include IsWFb T.
 
-Section specifications.
+Section specs.
 
 Variable k : Lvl.t.
 Variable t : t.
 
 Parameter Wf_is_wf_true : Wf k t <-> is_wf k t = true. 
+
 Parameter notWf_is_wf_false : ~ Wf k t <-> is_wf k t = false. 
 
-End specifications.
+End specs.
 
 End IsWFFull.
 
@@ -94,22 +95,27 @@ Module Type HasShift (Import T : EqualityType).
 
 Parameter shift : Lvl.t -> Lvl.t -> t -> t.
 
-Section specifications.
+Section specs.
 
 Variable m n k p : Lvl.t.
 Variable t t' : t.
 
 Parameter shift_zero_refl : eq (shift m 0 t) t.
+
 Parameter shift_trans     : eq (shift m n (shift m k t)) (shift m (n + k) t).
+
 Parameter shift_permute   : eq (shift m n (shift m k t)) (shift m k (shift m n t)).
+
 Parameter shift_unfold    : eq (shift m (n + k) t) (shift (m + n) k (shift m n t)). 
+
 Parameter shift_unfold_1  : n <= k -> k <= p -> 
                             eq (shift k (p - k) (shift n  (k - n) t)) (shift n (p - n) t).
+
 Parameter shift_eq_iff    : eq t t' <-> eq (shift m k t) (shift m k t').
 
 #[export] Declare Instance shift_eq : Proper (Lvl.eq ==> Lvl.eq ==> eq ==> eq) shift.
 
-End specifications.
+End specs.
 
 End HasShift.
 
@@ -125,7 +131,7 @@ Module Type IsLeveled (Import T : EqualityType) <: HasShift T <: IsWF T.
 
 Include HasShift T <+ IsWF T.
 
-Section specifications.
+Section specs.
 
 Variable m n k p : Lvl.t.
 Variable t : t.
@@ -133,12 +139,16 @@ Variable t : t.
 Parameter shift_preserves_wf_gen :
   k <= p -> m <= n -> k <= m -> p <= n -> p - k = n - m ->
   Wf m t -> Wf n (shift k (p - k) t).
+
 Parameter shift_preserves_wf   : Wf k t -> Wf (k + p) (shift k p t).
+
 Parameter shift_preserves_wf_1 : Wf k t -> Wf (k + p) (shift m p t).
+
 Parameter shift_preserves_wf_2 : m <= n -> Wf m t -> Wf n (shift m (n - m) t).
+
 Parameter shift_preserves_wf_zero : Wf k t -> Wf k (shift k 0 t).
 
-End specifications.
+End specs.
 
 End IsLeveled.
 
@@ -175,7 +185,9 @@ Module Type EqualityTypeWithLeibniz <: EqualityType.
 Include Eq <+ IsEq.
 
 Parameter eq_leibniz : forall x y, eq x y -> x = y.
+
 #[export] Hint Immediate eq_sym : core.
+
 #[export] Hint Resolve eq_refl eq_trans : core.
 
 End EqualityTypeWithLeibniz.
@@ -185,7 +197,9 @@ Module Type DecidableTypeWithLeibniz <: DecidableType.
 Include Eq <+ IsEq <+ HasEqDec.
 
 Parameter eq_leibniz : forall x y, eq x y -> x = y.
+
 #[export] Hint Immediate eq_sym : core.
+
 #[export] Hint Resolve eq_refl eq_trans : core.
 
 End DecidableTypeWithLeibniz.

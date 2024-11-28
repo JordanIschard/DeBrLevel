@@ -2,47 +2,50 @@ From Coq Require Import MSets Lia Arith.PeanoNat Classical_Prop Classes.Relation
 From MMaps Require Import MMaps.
 From DeBrLevel Require Import Level MapExtInterface.
 
+(** * Implementation - [MMaps] extension *)
+
+(** ** Extension of [MMaps] with new functions [Submap] and [For_all] *)
 Module MapET (Key : OrderedTypeWithLeibniz) (Data : EqualityType) 
                                             (M : Interface.S Key) <:  MapInterface Key Data M.
 
 Module OP := Facts.OrdProperties Key M.
 Import OP.P.
 
-(** ** Definition *)
+(** *** Definitions *)
 
 Definition t : Type := M.t Data.t.
+
 Definition eq := @M.Equal Data.t.
 
-Definition Submap (m m' : t) :=
+Definition Submap (m m': t) :=
   (forall y, M.In y m -> M.In y m') /\
   (forall k e e', M.MapsTo k e m -> M.MapsTo k e' m' -> e = e').
 
-(** **** ForAll property
-
-  MMaps does not provide a function that check if all elements in the environment satisfy a property [P]. Consequently we define it.
-*)
-Definition For_all (P : Key.t -> Data.t -> Prop) (m : t) := 
+(** MMaps does not provide a function that check if all elements in the environment satisfy a property [P]. Consequently we define it. *)
+Definition For_all (P: Key.t -> Data.t -> Prop) (m: t) := 
   forall k d, M.find k m = Some d -> P k d.
 
+(** *** Properties *)
 
-(** ** [Equivalence] property *)
+(** **** [eq] properties *)
 
 #[export] Instance eq_equiv : Equivalence eq := _.
+
 #[export] Instance iff_equiv : Equivalence iff := _.
+
 #[export] Instance logic_eq_equiv : forall A, Equivalence (@Logic.eq A) := _.
 
 #[local] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv : core.
 
-
-(** ** [Empty] property *)
+(** **** [Empty] properties *)
 
 #[export] Instance Empty_eq_iff : Proper (eq ==> iff) Empty.
 Proof. do 2 red; intros m m' Heq; now rewrite Heq. Qed.
 
-Lemma Empty_eq_spec (m : t) : Empty m -> m == M.empty.
+Lemma Empty_eq (m : t) : Empty m -> m == M.empty.
 Proof. intro HEmp; apply eq_empty; now apply is_empty_1. Qed.
 
-Lemma notEmpty_Add_spec (m m' : t) x e : Add x e m m' -> ~ Empty m'.
+Lemma notEmpty_Add (x: M.key) (e: Data.t) (m m': t) : Add x e m m' -> ~ Empty m'.
 Proof.
   intro HAdd; intro HEmp.
   unfold Add in *. rewrite HAdd in HEmp.
@@ -50,26 +53,25 @@ Proof.
   now apply add_1.
 Qed.
 
-Lemma notEmpty_find_spec (m : t) x e : Empty m -> ~ (M.find x m = Some e).
+Lemma notEmpty_find (x: M.key) (e: Data.t) (m: t) : Empty m -> ~ (M.find x m = Some e).
 Proof.
   intro HEmp; intro Hfi.
   apply (HEmp x e).
   now apply find_2.
 Qed. 
 
+(** **** [is_empty] properties *)
 
-(** ** [is_empty] property *)
-
-Lemma is_empty_Add_spec (m m' : t) x e : Add x e m m' -> M.is_empty m' = false.
+Lemma is_empty_Add (x: M.key) (e: Data.t) (m m': t) : Add x e m m' -> M.is_empty m' = false.
 Proof.
   intro HEmp. 
-  apply notEmpty_Add_spec in HEmp.
+  apply notEmpty_Add in HEmp.
   apply not_true_is_false.
   intro Hemp; apply HEmp.
   now apply is_empty_iff.
 Qed.
 
-Lemma is_empty_add_spec (m : t) x e : M.is_empty (M.add x e m) = false.
+Lemma is_empty_add (x: M.key) (e: Data.t) (m : t) : M.is_empty (M.add x e m) = false.
 Proof.
   apply not_true_is_false; intro Hemp.
   apply is_empty_iff in Hemp.
@@ -77,10 +79,9 @@ Proof.
   apply add_mapsto_iff; now left.
 Qed.
 
+(** **** [Add] properties *)
 
-(** ** [Add] property *)
-
-#[export] Instance Add_eq_iff : forall e,
+#[export] Instance Add_eq_iff : forall (e: Data.t),
   Proper (Key.eq ==> eq ==> eq ==> iff) (fun (k : Key.t) => Add k e).
 Proof.
   do 5 red. intros e k k' HKeq m m' Heqm n n' Heqn.
@@ -89,13 +90,13 @@ Proof.
   - now rewrite <- HKeq in *; rewrite Heqm; rewrite Heqn.
 Qed.
 
-(** ** [add] property *)
+(** **** [add] properties *)
 
-Lemma add_remove_spec (m : t) x v :
+Lemma add_remove (x: M.key) (v: Data.t) (m: t) :
   M.find x m = Some v -> m == (M.add x v (M.remove x m)).
 Proof. intro Hfi; rewrite add_remove_1; symmetry; now rewrite add_id. Qed.
 
-Lemma add_shadow (m : t) x v v' : 
+Lemma add_shadow (x: M.key) (v v': Data.t) (m: t) : 
   eq (M.add x v (M.add x v' m)) (M.add x v m). 
 Proof.
   intro y; destruct (Key.eq_dec x y).
@@ -104,12 +105,11 @@ Proof.
   - repeat rewrite add_neq_o; auto.
 Qed.
 
+(** **** [Submap] properties *)
 
-(** ** [Submap] property *)
-
-Lemma Submap_Empty_bot (m m' : t) : Empty m -> Submap m m'.
+Lemma Submap_Empty_bot (m m': t) : Empty m -> Submap m m'.
 Proof.
-  intro HEmp; apply Empty_eq_spec in HEmp.
+  intro HEmp; apply Empty_eq in HEmp.
   unfold Submap in *; split.
   - intros y HIn; rewrite HEmp in HIn.
     now apply not_in_empty in HIn. 
@@ -117,7 +117,7 @@ Proof.
     now apply empty_mapsto_iff in HMp.
 Qed.
 
-Lemma Submap_Empty_spec (m m' : t) :
+Lemma Submap_Empty (m m': t) :
   Submap m m' -> Empty m' -> Empty m.
 Proof.
   intros [HIn _] HEmp k e HM.
@@ -126,7 +126,7 @@ Proof.
   now apply (HEmp k e').
 Qed.
 
-Lemma Submap_empty_bot (m : t) : Submap M.empty m.
+Lemma Submap_empty_bot (m: t) : Submap M.empty m.
 Proof.
   split.
   - intros y HIn.
@@ -135,7 +135,7 @@ Proof.
     apply empty_mapsto_iff in HMp; contradiction.
 Qed.
 
-Lemma Submap_Add_spec (m m' m1 : t) x v :
+Lemma Submap_Add (x: M.key) (v: Data.t) (m m' m1: t) :
   Submap m' m1 -> ~ M.In x m -> Add x v m m' -> Submap m m1.
 Proof.
   intros [HIn' HMp'] HIn HAdd; unfold Add in *; split.
@@ -148,7 +148,7 @@ Proof.
     now apply add_mapsto_new; auto.
 Qed.
 
-Lemma Submap_Add_in_spec (m m' m1 : t) x v :
+Lemma Submap_Add_in (x: M.key) (v: Data.t) (m m' m1: t) :
   Submap m' m1 -> ~ M.In x m -> Add x v m m' -> M.In x m1.
 Proof.
   unfold Add; intros [HIn _] HnIn Heq.
@@ -156,7 +156,7 @@ Proof.
   apply add_in_iff; now left.
 Qed.
 
-Lemma Submap_Add_find_spec (m m' m1 : t) x v :
+Lemma Submap_Add_find (x: M.key) (v: Data.t) (m m' m1: t) :
   Submap m' m1 -> ~ M.In x m -> Add x v m m' -> M.find x m1 = Some v.
 Proof.
   unfold Add; intros [HIn HMp] HnIn Heq.
@@ -172,7 +172,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma Submap_Add_spec_1 (m m' m1 : t) x v :
+Lemma Submap_Add_1 (x: M.key) (v: Data.t) (m m' m1: t) :
   Submap m m1 -> 
   ~ M.In x m -> M.find x m1 = Some v -> Add x v m m' ->
   Submap m' m1.
@@ -191,7 +191,7 @@ Proof.
     -- apply (HMp k e e1) in HMp1 as Heq1; auto.
 Qed.
 
-Lemma Submap_add_spec (m m' : t) x v :
+Lemma Submap_add (x: M.key) (v: Data.t) (m m': t) :
   Submap m m' -> Submap (M.add x v m) (M.add x v m').
 Proof.
   intros [HIn HMp]; split.
@@ -205,7 +205,7 @@ Proof.
     apply (HMp k); auto.
 Qed.
 
-Lemma Submap_add_spec_1 (m m' : t) x v :
+Lemma Submap_add_1 (x: M.key) (v: Data.t) (m m': t) :
   ~ M.In x m' -> Submap m m' -> Submap m (M.add x v m').
 Proof.
   intros HnIn [HIn HMp]; split.
@@ -218,13 +218,21 @@ Proof.
     -- now apply (HMp k).
 Qed.
 
-Lemma Submap_in_spec (m m' : t) x : Submap m m' -> M.In x m -> M.In x m'.
+Lemma Submap_add_2 (x: M.key) (v: Data.t) (m m': t) : 
+  ~ M.In x m -> Submap (M.add x v m) m' -> Submap m m'.
+Proof.
+  intros HIn HSub.
+  eapply Submap_Add; eauto.
+  eapply Add_add.
+Qed.
+
+Lemma Submap_in (x: M.key) (m m': t) : Submap m m' -> M.In x m -> M.In x m'.
 Proof. intros [HIn _]; auto. Qed.
 
-Lemma Submap_notin_spec (m m' : t) x : Submap m m' -> ~M.In x m' -> ~M.In x m.
+Lemma Submap_notin (x: M.key) (m m': t) : Submap m m' -> ~M.In x m' -> ~M.In x m.
 Proof. intros [HIn _] HIn' HIn1; apply HIn'; auto. Qed.
 
-Lemma Submap_find_spec (m m' : t) x v :
+Lemma Submap_find (x: M.key) (v: Data.t) (m m': t) :
   Submap m m' -> M.find x m = Some v -> M.find x m' = Some v.
 Proof.
   induction m using map_induction; intros Hsub Hfind.
@@ -239,7 +247,7 @@ Proof.
        assert (M.MapsTo x0 v m2). { rewrite H0. rewrite add_mapsto_iff; now left. }
        destruct H3. apply H2 with (e' := x1) in H4; auto; subst. now apply find_1.
        reflexivity.
-    -- rewrite add_neq_o in *; auto; eapply Submap_Add_spec in Hsub; eauto.
+    -- rewrite add_neq_o in *; auto; eapply Submap_Add in Hsub; eauto.
        intro; apply n; now symmetry.
 Qed.
 
@@ -285,12 +293,9 @@ Qed.
 #[export] Instance Submap_po : PreOrder Submap.
 Proof. split; try apply Submap_refl; apply Submap_trans. Qed.
 
+(** **** [For_all] properties *)
 
-(** ** [For_all] property *)
-Section For_all.
-
-
-#[export] Instance For_all_proper (P : Key.t -> Data.t -> Prop) : 
+#[export] Instance For_all_proper (P: Key.t -> Data.t -> Prop) : 
   Proper (eq ==> iff) (For_all P).
 Proof.
   intros o o' Heqo; unfold For_all; split; intros HFa k d Hfi.
@@ -298,24 +303,23 @@ Proof.
   - rewrite Heqo in Hfi; auto.
 Qed.
 
-Lemma For_all_empty_spec (P : Key.t -> Data.t -> Prop) : For_all P M.empty.
+Lemma For_all_empty (P: Key.t -> Data.t -> Prop) : For_all P M.empty.
 Proof. 
   intros k d Hfi.
   apply find_2 in Hfi.
   apply empty_mapsto_iff in Hfi; contradiction.
 Qed.
 
-Lemma For_all_Empty_spec (o : t) (P : Key.t -> Data.t -> Prop) :
+Lemma For_all_Empty (o: t) (P: Key.t -> Data.t -> Prop) :
   Empty o -> For_all P o.
 Proof.
-  intros HEmp k d Hfi; apply Empty_eq_spec in HEmp.
+  intros HEmp k d Hfi; apply Empty_eq in HEmp.
   rewrite HEmp in Hfi.
   apply find_2 in Hfi.
   apply empty_mapsto_iff in Hfi; contradiction.
 Qed.
 
-Lemma For_all_add_spec 
-  (o : t) (k : Key.t) (d : Data.t) (P : Key.t -> Data.t -> Prop) :
+Lemma For_all_add (k : Key.t) (d : Data.t) (o : t) (P : Key.t -> Data.t -> Prop) :
  P k d /\ For_all P o -> For_all P (M.add k d o).
 Proof.
   intros [HP HFa] k' d' Hfi.
@@ -326,13 +330,13 @@ Proof.
   - rewrite add_neq_o in Hfi; auto.
 Qed.
 
-Lemma For_all_add_notin_spec 
-  (o : t) (k : Key.t) (d : Data.t) (P : Key.t -> Data.t -> Prop) :
- ~ M.In k o ->
+Lemma For_all_add_notin 
+  (k : Key.t) (d : Data.t) (o : t) (P : Key.t -> Data.t -> Prop) :
+  ~ M.In k o ->
  ((P k d /\ For_all P o) <-> For_all P (M.add k d o)).
 Proof.
   intro HnIn; split.
-  - apply For_all_add_spec.
+  - apply For_all_add.
   - intro HFa; split.
     -- apply HFa.
        now rewrite add_eq_o.
@@ -345,28 +349,19 @@ Proof.
          now rewrite add_neq_o.
 Qed.
 
-End For_all.
-
 End MapET.
 
 
+(** ---- *)
 
 
-
-
-
-
-
-
-
-
-
+(** ** Extension of [MMaps] with functions [max_key] and [new_key] *)
 Module MapETLVL (Data : EqualityType) (M : Interface.S Level) <:  MapLVLInterface Data M.
 
 Include MapET Level Data M.
 Import OP.P.
 
-(** ** Definition *)
+(** *** Definitions *)
 
 Definition max_key (m : t) : nat :=
   foldkeys Nat.max m 0.
@@ -374,7 +369,9 @@ Definition max_key (m : t) : nat :=
 Definition new_key (m : t) : nat := 
   if M.is_empty m then 0 else S (max_key m).
 
-(** ** [max] property *)
+(** *** Properties *)
+
+(** **** [max_key] properties *)
 
 #[export] Instance max_key_proper : 
   Proper (Logic.eq ==> Logic.eq ==> Logic.eq) Nat.max := _.
@@ -389,7 +386,6 @@ Proof. unfold Diamond; intros; subst; lia. Qed.
 #[local] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv max_key_proper 
                       max_key_diamond max_key_proper_forall : core.
 
-
 #[export] Instance max_key_eq : Proper (eq ==> Logic.eq) max_key.
 Proof.
   repeat red; unfold max_key; intros.
@@ -397,163 +393,184 @@ Proof.
   now apply Equal_Eqdom.
 Qed.
 
-Lemma max_key_Empty_spec (m : t) : Empty m -> max_key m = 0.
+Lemma max_key_Empty (m : t) : Empty m -> max_key m = 0.
 Proof. intro HEmp; unfold max_key; rewrite foldkeys_Empty; auto. Qed.
 
-Lemma max_key_empty_spec : max_key M.empty = 0.
+Lemma max_key_empty : max_key M.empty = 0.
 Proof. unfold max_key; rewrite foldkeys_Empty; auto; apply empty_1. Qed.
 
-Lemma max_key_Add_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->
+Lemma max_key_Add_max (x: M.key) (v: Data.t) (m m': t) : 
+  Add x v m m' -> max_key m' = max x (max_key m).
+Proof.
+  intro HA.
+  destruct (In_dec m x).
+  - unfold Add in HA; rewrite HA; clear HA.
+    destruct i as [v' HM].
+    apply find_1 in HM.
+    apply add_id in HM.
+    rewrite <- HM.
+    rewrite add_shadow.
+    rewrite <- add_remove_1.
+    symmetry.
+    rewrite <- add_remove_1.
+    symmetry.
+    unfold max_key.
+    rewrite foldkeys_Add 
+    with (m1 := (M.remove x m)) (k := x) (e := v); auto.
+    -- symmetry. 
+       rewrite foldkeys_Add
+       with (m1 := (M.remove x m)) (k := x) (e := v'); auto.
+       + lia.
+       + rewrite remove_in_iff; intros []; auto.
+       + apply Add_add.
+    -- rewrite remove_in_iff; intros []; auto.
+    -- apply Add_add.
+  - unfold max_key. 
+    rewrite foldkeys_Add; eauto.
+Qed.
+
+(* begin hide *)
+(* 
+Lemma max_key_Add_spec (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->
   (max_key m' = x /\ max_key m <= x) \/ (max_key m' = max_key m /\ max_key m > x).
 Proof.
-  intros HnIn HAdd; unfold max_key. 
-  rewrite foldkeys_Add; eauto.
-  destruct (Nat.leb_spec0 (foldkeys Nat.max m 0) x).
-  - apply max_l in l as l'. left; rewrite l' in *; split; auto.
-  - rewrite max_r; try lia.
+  intro HA.
+  rewrite (max_key_Add_max x v m m' HA); lia.
 Qed.
+*)
+(* end hide *)
 
-Lemma max_key_Add_ge_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->  max_key m <= x -> max_key m' = x.
+Lemma max_key_Add_l (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->  max_key m <= x -> max_key m' = x.
 Proof.
-  intros HnIn HAdd Hmax; unfold max_key.
-  rewrite foldkeys_Add; eauto.
-  now apply max_l.
+  intro HA.
+  rewrite (max_key_Add_max x v m m' HA); lia.
 Qed.
 
-Lemma max_key_Add_lt_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->  max_key m > x -> max_key m' = max_key m.
+Lemma max_key_Add_r (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->  max_key m > x -> max_key m' = max_key m.
 Proof.
-  intros HnIn HAdd Hmax; unfold max_key in *.
-  rewrite foldkeys_Add; eauto.
-  apply max_r; lia.
+  intro HA.
+  rewrite (max_key_Add_max x v m m' HA); lia.
+Qed. 
+
+Lemma max_key_add_max (x: M.key) (v: Data.t) (m: t) : 
+  max_key (M.add x v m) = max x (max_key m).
+Proof.
+  apply max_key_Add_max with (v := v).
+  apply Add_add.
 Qed.
 
-Lemma max_key_add_spec (m : t) x v :
-  ~M.In x m -> (max_key (M.add x v m) = x /\ max_key m <= x) \/ 
+(* begin hide *)
+(* 
+Lemma max_key_add_spec (x: M.key) (v: Data.t) (m: t) :
+  (max_key (M.add x v m) = x /\ max_key m <= x) \/ 
                (max_key (M.add x v m) = max_key m /\ max_key m > x).
 Proof.
-  intros; destruct (Nat.leb_spec0 (max_key m) x).
-  - left; split; auto; unfold max_key,foldkeys; rewrite fold_add; auto.
-    -- now rewrite max_l.
-    -- repeat red; intros; now subst.
-  - right; split; try lia; unfold max_key,foldkeys; rewrite fold_add; auto.
-    -- rewrite max_r; auto. assert (x <= max_key m) by lia. 
-      now unfold max_key,foldkeys in H0.
-    -- repeat red; intros; now subst.
+  rewrite (max_key_add_max x v m); lia.
 Qed.
+*)
+(* end hide *)
 
-Lemma max_key_add_ge_spec (m : t) x v :
-  ~M.In x m -> max_key m <= x -> max_key (M.add x v m) = x.
+Lemma max_key_add_l (x: M.key) (v: Data.t) (m: t) :
+  max_key m <= x -> max_key (M.add x v m) = x.
 Proof.
-  intros HnIn Hle; 
-  apply max_key_add_spec with (v := v) in HnIn as [[Heq Hle'] | [Heq Hgt]]; auto; lia.
+  rewrite (max_key_add_max x v m); lia.
 Qed.
 
-Lemma max_key_add_lt_spec (m : t) x v :
-  ~M.In x m -> max_key m > x -> max_key (M.add x v m) = max_key m.
+Lemma max_key_add_r (x: M.key) (v: Data.t) (m: t) :
+  max_key m > x -> max_key (M.add x v m) = max_key m.
 Proof.
-  intros HnIn Hle; 
-  apply max_key_add_spec with (v := v) in HnIn as [[Heq Hle'] | [Heq Hgt]]; auto; lia.
+  rewrite (max_key_add_max x v m); lia.
 Qed.
 
-Lemma max_key_add_spec_1 (m m' : t) x v v':
-  ~M.In x m -> ~M.In x m' ->
+Lemma max_key_add_iff (x: M.key) (v v': Data.t) (m m' : t) :
   max_key m = max_key m' -> max_key (M.add x v m) = max_key (M.add x v' m').
 Proof.
-  intros HnIn HnIn'. 
-  apply max_key_add_spec with (v := v) in HnIn as HI. 
-  apply max_key_add_spec with (v := v') in HnIn' as HI'.
-  destruct HI as [[Heq1 Hleb1] | [Heq1 Hgt1]];
-  destruct HI' as [[Heq2 Hleb2] | [Heq2 Hgt2]]; subst; try lia.
+  intro Heq.
+  do 2 rewrite max_key_add_max.
+  now rewrite Heq. 
 Qed.
 
-Lemma max_key_ub_spec (m : t) x : x > max_key m -> for_all_dom (fun y => y <? x) m = true.
+Lemma max_key_ub (x: M.key) (m : t) : 
+  x > max_key m -> for_all_dom (fun y => y <? x) m = true.
 Proof.
-  revert x; induction m using map_induction; intros y Hgt.
-  - unfold for_all_dom; apply for_all_iff; auto.
-    intros k e HMp; exfalso.
-    apply (H k e HMp).
-  - unfold for_all_dom; apply for_all_iff; auto.
-    intros k e' HMp. 
-    apply max_key_Add_spec in H0 as HI; auto.
-    destruct HI as [[Heq Hle] | [Heq Hgt1]]; 
-    subst; apply find_1 in HMp; 
-    rewrite H0 in HMp; rewrite add_o in HMp.
-    -- destruct (Level.eq_dec (max_key m2) k); subst.
-       + apply Nat.ltb_lt; lia.
-       + apply find_2 in HMp. 
-         assert (y > max_key m1) by lia.
-         apply IHm1 in H1. 
-         unfold for_all_dom in *; rewrite for_all_iff in H1; auto.
-         apply (H1 k e' HMp).
-    -- destruct (Level.eq_dec x k); subst.
-       + inversion HMp; subst; clear HMp. 
-         rewrite Heq in *; clear Heq.
-         apply Nat.ltb_lt; lia.
-       + apply find_2 in HMp. rewrite Heq in *. apply IHm1 in Hgt.
-         unfold for_all_dom in *; rewrite for_all_iff in *; auto. 
-         apply (Hgt k e' HMp).
+  revert x.
+  induction m using map_induction; intros y Hgt.
+  - unfold for_all_dom.
+    apply for_all_iff; auto.
+    intros x v HM.
+    exfalso; apply (H x v HM).
+  - apply for_all_iff; auto.
+    intros z v HM. 
+    unfold Add in H0; rewrite H0 in *; clear H0.
+    apply add_mapsto_iff in HM as [[Heq Heq'] | [Hneq HM]]; subst.
+    -- destruct (Level.leb_spec0 (max_key m1) z).
+       + rewrite max_key_add_l in Hgt; try lia.
+         apply Level.ltb_lt; lia.
+       + apply Level.ltb_lt. 
+         rewrite max_key_add_r in Hgt; lia.
+    -- assert (y > max_key m1).
+       + rewrite max_key_add_max in Hgt; lia.
+       + apply IHm1 in H0. 
+         unfold for_all_dom in *.
+         rewrite for_all_iff in H0; auto.
+         apply (H0 z v HM).
 Qed.
 
-Lemma max_key_notin_spec (m : t) x : x > max_key m -> ~ M.In x m.
+Lemma max_key_notin (x: M.key) (m : t) : x > max_key m -> ~ M.In x m.
 Proof.
   intros Hgt [v HMp]. 
-  apply max_key_ub_spec in Hgt as Hfa. 
+  apply max_key_ub in Hgt as Hfa. 
   unfold for_all_dom in *; rewrite for_all_iff in *; auto.
   apply Hfa in HMp.
   apply Nat.ltb_lt in HMp; lia.
 Qed.
 
-Lemma max_key_add_max_spec (m : t) v :
+Lemma max_key_add_max_key (v: Data.t) (m : t) :
   max_key (M.add (S (max_key m)) v m) = S (max_key m).
 Proof.
-  rewrite max_key_add_ge_spec; auto.
-  apply max_key_notin_spec; lia.
+  rewrite max_key_add_max; lia.
 Qed.
 
-Lemma max_key_in_spec (m : t) (x : M.key) :
+Lemma max_key_in (x : M.key) (m : t) :
   M.In x m -> x <= (max_key m).
 Proof.
-  revert x; induction m using map_induction; intros k Hin.
-  - exfalso; destruct Hin as [y Hin]; now apply (H k y).
-  - unfold Add in *; rewrite H0 in *; clear H0.
-    apply add_in_iff in Hin as [Heq | HIn]; subst.
-    -- destruct (Nat.leb_spec0 (max_key m1) k).
-       + rewrite max_key_add_ge_spec; auto; lia.
-       + rewrite max_key_add_lt_spec; auto; lia.
-    -- apply IHm1 in HIn.
-       destruct (Nat.leb_spec0 (max_key m1) x).
-       + rewrite max_key_add_ge_spec; auto; lia.
-       + rewrite max_key_add_lt_spec; auto; lia.
+  intros [v Hfi].
+  apply find_1 in Hfi.
+  apply add_id in Hfi.
+  rewrite <- Hfi.
+  rewrite max_key_add_max; lia.
 Qed.
 
-Lemma max_key_Submap_spec (m m' : t) : Submap m m' -> max_key m <= max_key m'.
+Lemma max_key_Submap (m m' : t) : Submap m m' -> max_key m <= max_key m'.
 Proof.
   revert m'; induction m using map_induction; intros m' Hsub.
-  - rewrite max_key_Empty_spec; auto; lia.
-  - apply max_key_Add_spec in H0 as HI; auto. 
-    destruct HI as [[Heq Hle] | [Heq Hgt]]; subst;
-    eapply Submap_Add_spec in Hsub as Hsub'; eauto.
-    -- eapply Submap_Add_in_spec in H0; eauto.
-       apply IHm1 in Hsub'.
-       destruct (Nat.leb_spec0 (max_key m2) (max_key m')); try lia.
-       assert ((max_key m2) > (max_key m')) by lia. clear n. 
-       apply max_key_notin_spec in H1.
-       contradiction.
-    -- rewrite Heq in *.
-       now apply IHm1. 
+  - rewrite max_key_Empty; auto; lia.
+  - unfold Add in H0; rewrite H0 in *.
+    assert (HIn: M.In x (M.add x e m1)) by (rewrite add_in_iff; auto).
+    apply Submap_in with (m' := m') in HIn; auto.
+    destruct HIn as [v Hfi].
+    apply find_1 in Hfi.
+    apply add_id in Hfi.
+    rewrite <- Hfi.
+    apply Submap_add_2 in Hsub; auto.
+    apply IHm1 in Hsub.
+    do 2 rewrite max_key_add_max; lia.
 Qed.
 
-Lemma max_key_add_in_spec (m: t) (x : M.key) v :
+Lemma max_key_add_in (x : M.key) (v: Data.t) (m: t) :
   M.In x m -> (max_key (M.add x v m)) = (max_key m).
 Proof.
-  intro HIn. apply Eqdom_in_add with (e := v) in HIn.
-  unfold max_key. rewrite foldkeys_Proper; eauto. now symmetry.
+  intros [v' Hfi].
+  apply find_1 in Hfi.
+  apply add_id in Hfi.
+  rewrite <- Hfi at 2.
+  now do 2 rewrite max_key_add_max.
 Qed.
   
-(** ** [new] property *)
+(** **** [new_key] properties *)
 
 Lemma new_key_unfold (m : t) : 
   new_key m = if M.is_empty m then 0 else S (max_key m).
@@ -571,107 +588,123 @@ Proof.
     now rewrite Heq. 
 Qed.
 
-Lemma new_key_Empty_spec (m : t) : Empty m -> new_key m = 0.
+Lemma new_key_Empty (m : t) : Empty m -> new_key m = 0.
 Proof.
   intro HEmp; unfold new_key; apply is_empty_1 in HEmp; now rewrite HEmp.
 Qed.
 
-Lemma new_key_empty_spec : new_key M.empty = 0.
+Lemma new_key_empty : new_key M.empty = 0.
 Proof.
   assert (@Empty Data.t M.empty) by apply empty_1.
   intros; unfold new_key; apply is_empty_1 in H; now rewrite H.
 Qed.
 
+Lemma new_key_Add_max (x: M.key) (v: Data.t) (m m': t) : 
+  Add x v m m' -> new_key m' = max (S x) (new_key m).
+Proof.
+  intro HA.
+  unfold new_key.
+  destruct (M.is_empty m) eqn:Hemp.
+  - destruct (M.is_empty m') eqn:Hemp'.
+    -- apply is_empty_2 in Hemp'.
+       exfalso.
+       apply (Hemp' x v).
+       unfold Add in HA; rewrite HA; clear HA.
+       apply add_mapsto_iff; auto.
+    -- unfold Add in HA; rewrite HA; clear HA. 
+       rewrite max_key_add_max.
+       apply is_empty_2 in Hemp.
+       rewrite max_key_Empty; auto; lia.
+  - destruct (M.is_empty m') eqn:Hemp'.
+    -- apply is_empty_2 in Hemp'.
+       exfalso.
+       apply (Hemp' x v).
+       unfold Add in HA; rewrite HA; clear HA.
+       apply add_mapsto_iff; auto.
+    -- unfold Add in HA; rewrite HA; clear HA.
+       rewrite max_key_add_max; lia.
+Qed. 
+
+Lemma new_key_add_max (x: M.key) (v: Data.t) (m: t) : 
+  new_key (M.add x v m) = max (S x) (new_key m).
+Proof.
+  apply (new_key_Add_max x v m).
+  apply Add_add.
+Qed. 
+
 Lemma new_key_geq_max_key (m : t) : new_key m >= max_key m.
 Proof.
   rewrite new_key_unfold.
   destruct (M.is_empty m) eqn:HEmp; try lia.
-  apply is_empty_2 in HEmp; rewrite max_key_Empty_spec; auto.
+  apply is_empty_2 in HEmp; rewrite max_key_Empty; auto.
 Qed. 
 
-Lemma new_key_add_spec (m : t) x v :
-  ~M.In x m -> (new_key (M.add x v m) = S x /\ new_key m <= S x) \/ 
+(* begin hide *)
+(*
+Lemma new_key_add_spec (x: M.key) (v: Data.t) (m: t) :
+  (new_key (M.add x v m) = S x /\ new_key m <= S x) \/ 
                (new_key (M.add x v m) = new_key m /\ new_key m > S x).
 Proof.
-  intro HnIn; unfold new_key. rewrite is_empty_add_spec.
-  apply max_key_add_spec with (v := v) in HnIn as [[Heq Hle] | [Heq Hgt]].
-  - left; split; try now f_equal.
-    destruct (M.is_empty m); try lia.
-  - right.
-    destruct (M.is_empty m) eqn:Heq1.
-    -- exfalso.
-       rewrite max_key_Empty_spec in Hgt; try lia.
-       now apply is_empty_iff.
-    -- split; try now f_equal; lia.
+  rewrite new_key_add_max; lia.
 Qed.
+*)
+(* end hide *)
 
-Lemma new_key_add_lt_spec (m : t) x v :
-  ~M.In x m -> new_key m > S x -> new_key (M.add x v m) = new_key m.
+Lemma new_key_add_l (x: M.key) (v: Data.t) (m: t) :
+  new_key m <= S x -> new_key (M.add x v m) = S x.
 Proof.
-  intros HnIn Hle; 
-  apply new_key_add_spec with (v := v) in HnIn as [[Heq Hle'] | [Heq Hgt]]; auto; lia.
+  rewrite new_key_add_max; lia.
 Qed.
 
-Lemma new_key_add_ge_spec (m : t) x v :
-  ~M.In x m -> new_key m <= S x -> new_key (M.add x v m) = S x.
+Lemma new_key_add_r (x: M.key) (v: Data.t) (m: t) :
+  new_key m > S x -> new_key (M.add x v m) = new_key m.
 Proof.
-  intros HnIn Hle; 
-  apply new_key_add_spec with (v := v) in HnIn as [[Heq Hle'] | [Heq Hgt]]; auto; lia.
+  rewrite new_key_add_max; lia.
 Qed.
 
-Lemma new_key_add_in_spec (m: t) (x : M.key) v :
+Lemma new_key_add_in (x : M.key) (v: Data.t) (m: t) :
   M.In x m -> (new_key (M.add x v m)) = (new_key m).
 Proof.
-  intro HIn; unfold new_key.
-  rewrite is_empty_add_spec.
-  destruct (M.is_empty m) eqn:Heq.
-  - apply is_empty_2 in Heq; exfalso.
-    destruct HIn as [k HMp]. now apply (Heq x k).
-  - now f_equal; apply max_key_add_in_spec.
+  intros [v' Hfi].
+  apply find_1 in Hfi.
+  apply add_id in Hfi.
+  rewrite <- Hfi at 2.
+  now do 2 rewrite new_key_add_max.
 Qed.
 
-Lemma new_key_Add_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->
+(* begin hide *)
+(* 
+Lemma new_key_Add_spec (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->
     (new_key m' = S x /\ new_key m <= S x) \/ (new_key m' = new_key m /\ new_key m > S x).
 Proof.
-  intros HnIn HAdd. 
-  unfold Add in HAdd; rewrite HAdd.
-  now apply new_key_add_spec.
+  intro HA.
+  rewrite (new_key_Add_max x v m m' HA); lia.
 Qed. 
+*)
+(* end hide *)
 
-Lemma  new_key_Add_ge_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->  new_key m <= S x -> new_key m' = S x.
-Proof. 
-  intros HnIn HAdd. 
-  unfold Add in HAdd; rewrite HAdd.
-  now apply new_key_add_ge_spec.
+Lemma  new_key_Add_l (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->  new_key m <= S x -> new_key m' = S x.
+Proof.
+  intro HA.
+  rewrite (new_key_Add_max x v m m' HA); lia.
 Qed.
 
-Lemma new_key_Add_lt_spec (m m' : t) x v :
-  ~M.In x m -> Add x v m m' ->  new_key m > S x -> new_key m' = new_key m.
-Proof. 
-  intros HnIn HAdd. 
-  unfold Add in HAdd; rewrite HAdd.
-  now apply new_key_add_lt_spec.
+Lemma new_key_Add_r (x: M.key) (v: Data.t) (m m': t) :
+  Add x v m m' ->  new_key m > S x -> new_key m' = new_key m.
+Proof.
+  intro HA.
+  rewrite (new_key_Add_max x v m m' HA); lia.
 Qed.
 
-Lemma new_key_add_new_key_spec (m : t) v :
+Lemma new_key_add_new_key (v: Data.t) (m: t) :
   new_key (M.add (new_key m) v m) = S (new_key m).
 Proof.
-  unfold new_key.
-  rewrite is_empty_add_spec.
-  destruct (M.is_empty m) eqn:Hemp.
-  - f_equal.
-    apply max_key_add_ge_spec.
-    -- intros [v1 HMp].
-       apply is_empty_iff in Hemp.
-       now apply (Hemp 0 v1).
-    -- apply is_empty_iff in Hemp. 
-       now rewrite max_key_Empty_spec.
-  - f_equal. now rewrite max_key_add_max_spec. 
-Qed.
+  rewrite new_key_add_max; lia.
+Qed. 
 
-Lemma new_key_notin_spec (m : t) x : x >= new_key m -> ~ M.In x m.
+Lemma new_key_notin (x: M.key) (m: t) : x >= new_key m -> ~ M.In x m.
 Proof.
   unfold new_key; intro ge.
   destruct (M.is_empty m) eqn:Heq.
@@ -679,42 +712,42 @@ Proof.
     apply is_empty_iff in Heq.
     destruct HIn as [v HMp].
     now apply (Heq x v).
-  - apply max_key_notin_spec; lia.
+  - apply max_key_notin; lia.
 Qed.
 
-Lemma new_key_in_spec (m : t) x : M.In x m -> x < new_key m.
+Lemma new_key_in (x: M.key) (m : t) : M.In x m -> x < new_key m.
 Proof.
   intro HIn; unfold new_key.
-  apply max_key_in_spec in HIn as Hle.
+  apply max_key_in in HIn as Hle.
   destruct (M.is_empty m) eqn:Hemp; try lia.
   apply is_empty_iff in Hemp.
   exfalso; destruct HIn as [v HMp].
   now apply (Hemp x v).
 Qed.
 
-Lemma new_key_Submap_spec (m m' : t) :
+Lemma new_key_Submap (m m' : t) :
   Submap m m' -> new_key m <= new_key m'.
 Proof.
   intro Hsub; unfold new_key.
   destruct (M.is_empty m') eqn:Heq.
   - apply is_empty_iff in Heq.
-    apply Submap_Empty_spec in Hsub; auto.
+    apply Submap_Empty in Hsub; auto.
     apply is_empty_iff in Hsub.
     now rewrite Hsub.
   - destruct (M.is_empty m) eqn:Heq'; try lia.
     apply le_n_S. 
-    now apply max_key_Submap_spec.
+    now apply max_key_Submap.
 Qed.
 
-Lemma new_key_Submap_add_spec (m m' : t) v v' :
+Lemma new_key_Submap_add (v v': Data.t) (m m' : t) :
   Submap m m' -> Submap m (M.add (S (new_key m')) v (M.add (new_key m') v' m')).
 Proof.
   intros Hsub. 
-  repeat apply Submap_add_spec_1; auto.
+  repeat apply Submap_add_1; auto.
   - intro HIn. 
     apply add_in_iff in HIn as [Heq | HIn]; try lia.
-    apply new_key_notin_spec in HIn; auto.
-  - apply new_key_notin_spec; auto.
+    apply new_key_notin in HIn; auto.
+  - apply new_key_notin; auto.
 Qed.
 
 #[export] Hint Resolve iff_equiv Equal_equiv logic_eq_equiv max_key_proper 
