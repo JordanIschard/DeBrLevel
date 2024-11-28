@@ -1,4 +1,4 @@
-From DeBrLevel Require Import LevelInterface Level MapLevel Levels OptionLevel.
+From DeBrLevel Require Import LevelInterface Level MapLevelLVLD Levels OptionLevel.
 From Coq Require Import Lia Classes.Equivalence Classes.Morphisms 
                         Logic.Classical_Pred_Type Logic.Classical_Prop.
 
@@ -33,30 +33,27 @@ Module Lambda <: IsLvlETWL.
   .
 
   (**
-  The valid property verifies that all variables are valid. Contrary to the 
-  [shift] function, the parameter is incremented when it goes through an
-  abstraction. This incrementation is due to the implicit bound variable which
-  become accessible in the body of the abstraction.
+    The well-formed property states that a term is Wf under a level [k] if all free variables are strictly lower than k. As we move into the term and specially under abstraction the set of free variables increases. Consequently the "well-formed level" [k] has to be incremented in order to it into account.
   *)
-  Inductive valid' : Lvl.t -> t -> Prop :=
-  | v_var n m : 
-                  L.valid n m -> 
+  Inductive Wf' : Lvl.t -> t -> Prop :=
+  | wf_var n m : 
+                  L.Wf n m -> 
             (*-----------------------*)      
-                valid' n (tm_var m)
+                Wf' n (tm_var m)
 
 
-  | v_app n e1 e2 :
-                  valid' n e1 -> valid' n e2 -> 
+  | wf_app n e1 e2 :
+                  Wf' n e1 -> Wf' n e2 -> 
             (*----------------------------------*)
-                    valid' n (tm_app e1 e2)
+                    Wf' n (tm_app e1 e2)
 
-  | v_abs n e1 :
-                  valid' (S n) e1 -> 
+  | wf_abs n e1 :
+                  Wf' (S n) e1 -> 
             (*--------------------------*)
-                valid' n (tm_abs e1)
+                Wf' n (tm_abs e1)
   .
 
-  Definition valid := valid'.
+  Definition Wf := Wf'.
 
   Definition nat_to_var (n : nat) := tm_var n.
 
@@ -74,14 +71,14 @@ Module Lambda <: IsLvlETWL.
                                                       t custom lc at level 40, right associativity).
   Notation "'[⧐' lb '~' k ']' t" := (shift lb k t) (in custom lc at level 30, 
                                                       t custom lc at level 40, right associativity).
-  Infix "⊢" := valid (at level 20, no associativity).
+  Infix "⊢" := Wf (at level 20, no associativity).
 
-  (** ** Equality *)
+  (** ** [eq] fact *)
 
   Lemma eq_leibniz : forall e1 e2, eq e1 e2 -> e1 = e2.
   Proof. unfold eq. intros e1 e2 Heq. assumption. Qed.
 
-  (** ** Shift *)
+  (** ** [shift] properties *)
   Section shift.
 
   Variable lb lb' k k' : Lvl.t.
@@ -170,64 +167,61 @@ Module Lambda <: IsLvlETWL.
   
   End shift.
 
-  (** ** Valid *)
-  Section valid.
+  (** ** [Wf] properties *)
     
   #[export]
-  Instance valid_eq : Proper (Logic.eq ==> eq ==> iff) valid.
+  Instance Wf_iff : Proper (Logic.eq ==> eq ==> iff) Wf.
   Proof. repeat red; intros; subst; rewrite H0; split; auto. Qed.
 
-  Lemma valid_weakening : forall k k' e, (k <= k') -> valid k e -> valid k' e.
+  Lemma Wf_weakening : forall k k' e, (k <= k') -> Wf k e -> Wf k' e.
   Proof.
     intros k k' e; revert k k'; induction e; intros k k' Hle Hve; 
-    inversion Hve; subst; constructor; fold valid in *; eauto.
-    - apply (L.valid_weakening k k' t0 Hle H1).
+    inversion Hve; subst; constructor; fold Wf in *; eauto.
+    - apply (L.Wf_weakening k k' t0 Hle H1).
     - apply (IHe (S k) (S k')); auto. lia.
   Qed. 
 
-  Lemma shift_preserves_valid_1 : forall lb k k' e, 
-    valid k e -> valid (k + k') (shift lb k' e).
+  Lemma shift_preserves_wf_1 : forall lb k k' e, 
+    Wf k e -> Wf (k + k') (shift lb k' e).
   Proof.
     intros lb k k' e; revert lb k k'; induction e; intros lb k k' Hve; 
-    inversion Hve; subst; simpl; constructor; fold valid in *; auto.
-    - now apply L.shift_preserves_valid_1.
+    inversion Hve; subst; simpl; constructor; fold Wf in *; auto.
+    - now apply L.shift_preserves_wf_1.
     - replace (S (k + k')) with ((S k) + k') by lia.
       apply (IHe lb (S k) k' H1).
   Qed.
 
-  Lemma shift_preserves_valid : forall k k' e, valid k e -> valid (k + k') (shift k k' e).
+  Lemma shift_preserves_wf : forall k k' e, Wf k e -> Wf (k + k') (shift k k' e).
   Proof.
     intros k k' e Hve.
-    apply (shift_preserves_valid_1 k k k' _ Hve).
+    apply (shift_preserves_wf_1 k k k' _ Hve).
   Qed.
 
-  Lemma shift_preserves_valid_gen : forall lb lb' k k' e,
+  Lemma shift_preserves_wf_gen : forall lb lb' k k' e,
     k <= k' -> lb <= lb' -> k <= lb -> k' <= lb' -> 
     k' - k = lb' - lb -> 
-    valid lb e -> valid lb' (shift k (k' - k) e).
+    Wf lb e -> Wf lb' (shift k (k' - k) e).
   Proof.
     intros lb lb' k k' e; revert lb lb' k k'.
     induction e; intros lb lb' k k' Hle Hle1 Hle2 Hle3 Heq Hve;
-    simpl; inversion Hve; subst; fold valid in *; constructor.
-    - apply (L.shift_preserves_valid_gen lb); assumption.
+    simpl; inversion Hve; subst; fold Wf in *; constructor.
+    - apply (L.shift_preserves_wf_gen lb); assumption.
     - apply (IHe1 lb lb' k k'); assumption.
     - apply (IHe2 lb lb' k k'); assumption.
     - apply (IHe (S lb) (S lb') k k'); auto; lia.
   Qed.
 
-  Lemma shift_preserves_valid_2 : forall lb lb' e,
-    lb <= lb' -> valid lb e -> 
-    valid lb' (shift lb (lb' - lb) e).
-  Proof. intros. eapply shift_preserves_valid_gen; eauto. Qed. 
+  Lemma shift_preserves_wf_2 : forall lb lb' e,
+    lb <= lb' -> Wf lb e -> 
+    Wf lb' (shift lb (lb' - lb) e).
+  Proof. intros. eapply shift_preserves_wf_gen; eauto. Qed. 
 
-  Lemma shift_preserves_valid_zero : forall k e, valid k e -> valid k (shift k 0 e).
+  Lemma shift_preserves_wf_zero : forall k e, Wf k e -> Wf k (shift k 0 e).
   Proof. 
     intros; replace k with (k + 0); try lia;
-    now apply shift_preserves_valid_1. 
+    now apply shift_preserves_wf_1. 
   Qed. 
   
-  End valid.
-
 End Lambda.
 
 Import Lambda.
@@ -242,11 +236,11 @@ Compute ⟨[⧐ 4 ~ 3] (\,(2 (1 8)))⟩.
 (**
   This property does not hold for leveled element with binders.
 *)
-Lemma nshift_valid_refl: ~ (forall lb k e, valid lb e -> shift lb k e = e).
+Lemma nshift_wf_refl: ~ (forall lb k e, Wf lb e -> shift lb k e = e).
 Proof.
   intro c.
   assert (Hvabs: 0 ⊢ ⟨\,0⟩).
-  { repeat constructor; fold valid. }
+  { repeat constructor; fold Wf. }
   assert (Hshift: ⟨[⧐ 0 ~ 1] \,0⟩ <> ⟨\,0⟩).
   { compute. intro c1. inversion c1. }
 
@@ -255,7 +249,7 @@ Proof.
 Qed.
 
 (** Creating a map between variables and terms *)
-Module Context := MapLvlD.MakeLvlMapLVLD Lambda.
+Module Context := MakeLvlMapLVLD Lambda.
 
 (** Creating a list of variables *)
 Module VarList := Levels.
@@ -327,7 +321,7 @@ Inductive In : L.t -> Lambda.t -> Prop :=
 .
 
 (** 
-  If x is greater or equal to k then it cannot be in e because of the validity property. 
+  If x is greater or equal to k then it cannot be in e because of the Wfity property. 
 *)
 Definition FV (k : Lvl.t) (x : L.t) (e : Lambda.t) := k ⊢ e -> In x e /\ x < k.
 
@@ -336,42 +330,4 @@ Notation "'FV(' r ',' t ')' ⊣ k" := (FV k r t) (at level 40, t custom lc).
 Definition closed (k : Lvl.t) (e : Lambda.t) := forall (x : L.t), ~ (FV(x,e) ⊣ k).
 
 
-(*
-Lemma subsitution_preserves_valid_gen: forall k k' lb x v e,
-  k >= k' -> k' >= lb -> k ⊢ e -> k' ⊢ v -> k ⊢ ⟨[x := v ~ lb] e⟩.
-Proof.
-  intros k k' lb x v e; revert k k' x v.
-  induction e as [y | |]; intros k k' x v Hle Hle' Hve Hvv.
-  (* variable *)
-  - simpl. 
-    destruct (L.eqb_spec x y) as [Heq | Hneq]; subst.
-    -- apply (valid_weakening k' k _); assumption.
-    -- exact Hve.
-  (* application *)
-  - simpl. 
-    inversion Hve; subst; clear Hve; fold valid in *.
-    rename H2 into Hve1; rename H3 into Hve2.
-    constructor; fold valid.
-    -- apply (IHe1 k k' x v Hle Hle' Hve1 Hvv). 
-    -- apply (IHe2 k k' x v Hle Hle' Hve2 Hvv). 
-  (* abstraction *)
-  - simpl.
-    inversion Hve; subst; clear Hve; fold valid in *.
-    rename H1 into Hve.
-    constructor; fold valid.
-    apply (IHe (S k) (S k') x ([⧐ lb ~ 1] v)).
-    -- lia.
-    -- lia.
-    -- exact Hve.
-    -- replace (S k') with (k' + 1) by lia.
-       apply (shift_preserves_valid_1 lb k' 1 v Hvv).
-Qed.
-
-Lemma subsitution_preserves_valid: forall k x v e,
-  k ⊢ e -> k ⊢ v -> k ⊢ ⟨[x := v ~ k] e⟩.
-Proof.
-  intros k x v e Hve Hvv.
-  assert (Heq: k >= k) by lia.
-  apply (subsitution_preserves_valid_gen k k k x v e Heq Heq Hve Hvv).
-Qed.
-*)
+(* in progress *)
