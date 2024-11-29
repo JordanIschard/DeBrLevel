@@ -31,13 +31,13 @@ jobs:
         run: |
           eval $(opam config env)
           dune build
-          coq_makefile --help
 
       - name: doc
         if: github.event_name == 'push'
         run: |
           ls -a
-          $(COQBIN)coq_makefile -f _CoqProject -o Makefile.coq
+          coq_makefile --help
+          coq_makefile -f _CoqProject -o Makefile.coq
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
