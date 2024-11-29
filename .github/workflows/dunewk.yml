@@ -12,10 +12,6 @@ jobs:
     name: DuneBuilder
 
     runs-on: 'ubuntu-latest'
-    
-    permissions:
-      # required for all workflows
-      security-events: write
 
     steps:
       - name: Checkout repository
@@ -37,6 +33,7 @@ jobs:
           dune build
 
       - name: Generate documentation
+        if: github.event_name == 'push'
         run: |
           eval $(opam config env)
           make coqdoc
