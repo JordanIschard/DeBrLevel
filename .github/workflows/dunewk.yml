@@ -37,7 +37,8 @@ jobs:
         if: github.event_name == 'push'
         run: |
           ls -a
-          make coqdoc
+          make
+          make clean
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
