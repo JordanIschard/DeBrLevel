@@ -12,6 +12,10 @@ jobs:
     name: DuneBuilder
 
     runs-on: 'ubuntu-latest'
+    
+    permissions:
+      # required for all workflows
+      security-events: write
 
     steps:
       - name: Checkout repository
@@ -27,10 +31,14 @@ jobs:
           opam repo add coq-released https://coq.inria.fr/opam/released
           opam install coq-mmaps
 
-      - name: build
+      - name: Build project via dune
         run: |
           eval $(opam config env)
           dune build
+
+      - name: Generate documentation
+        run: |
+          eval $(opam config env)
           make coqdoc
 
       - name: Deploy to GitHub Pages
