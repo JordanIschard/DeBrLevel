@@ -20,7 +20,7 @@ jobs:
       - name: Setup dune
         uses: nmittu/setup-dune@v2
         with:
-          packages: "coq"
+          packages: "coq coq-prover"
 
       - name: Add MMaps
         run: |
@@ -31,12 +31,7 @@ jobs:
         run: |
           eval $(opam config env)
           dune build
-
-      - name: doc
-        run: |
-          ls -a
-          coq_makefile --help
-          coq_makefile -f _CoqProject -o Makefile.coq
+          make coqdoc
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
