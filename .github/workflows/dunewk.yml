@@ -1,0 +1,29 @@
+name: "Dune builder"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  builder:
+
+    name: DuneBuilder
+
+    runs-on: 'ubuntu-latest'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout
+
+      - name: Setup dune
+        uses: nmittu/setup-dune@v2
+        with:
+          packages: "coq coq-mmaps"
+          compiler: "5.0.1"
+
+      - name: build
+        run: |
+          eval $(opam config env)
+          dune build
