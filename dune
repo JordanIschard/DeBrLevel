@@ -2,8 +2,7 @@
 (coq.theory 
  (name DeBrLevel)
  (package coq-debr-lvl)
- (theories MMaps)
- (synopsis "Heart of the library, it contains module types that defined Level and modules."))
+ (theories MMaps))
 
 (include_subdirs qualified)
 

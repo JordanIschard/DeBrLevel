@@ -1,16 +1,10 @@
-# _Support library_ for using De Bruijn levels (version 1.2)
-
-## Task List
-
-- [x] Add feature asked in https://github.com/JordanIschard/DeBrLevel/issues/1
-- [ ] Create documentation asked in https://github.com/JordanIschard/DeBrLevel/issues/2
-- [ ] Add examples https://github.com/JordanIschard/DeBrLevel/issues/4
+# _Support library_ for using De Bruijn levels (version 1.0)
 
 ## Introduction
 
-_De Bruijn levels_ is a representation of variable in the lambda-calculus that avoid variable capture. Although this representation is much less known than the _De Bruijn indices_ representation, there are some useful characteristics, and we can use it in big formalization (like [Wormholes](https://github.com/sail-pl/tji/tree/clean_branch/formalisations/Wormholes "github link")).
+_De Bruijn levels_ is a representation of variable in the lambda-calculus that avoid variable capture. Although this representation is much less known than the _De Bruijn indices_ representation, there are some useful characteristics.
 
-Extract from my own work, here is a collection of interfaces, implementations and functions that can help you in yours use of De Bruijn levels.
+Extract from another work, here is a collection of interfaces, implementations and functions that can help you in yours use of De Bruijn levels.
 <!--
 ## Documentation
 
@@ -21,7 +15,7 @@ Here is the current version of the [documentation](/home/lifo/Bureau/Doctorat/[G
 In a lambda calculus term we have variables (`x`,`y`,`z`, ...) that can be _bound_ or _free_. In a term `t`, we state that a variable `x` is _free_ if there is no abstraction that use this variable name, otherwise the variable is _bound_.
 
 ```ocaml
-(- x is bind to the abstraction while y is free -)
+(* x is bind to the abstraction while y is free *)
 fun x -> x + y
 ```
 
@@ -111,14 +105,15 @@ To Build and install manually, do:
 
 ```bash
 git clone https://github.com/JordanIschard/DeBrLevel.git
+
 cd DeBrLevel
-make   # or make -j <number-of-cores-on-your-machine> 
-make install
+dune build @install 
 ```
 
 > [!NOTE]
 > The package is not submitted yet, but we have great hope to create an opam package and add our project to the [coq community repository](https://github.com/coq-community).
 
+<!--
 ## Structure of the library
 
 ### DeBrLevel
@@ -172,3 +167,5 @@ make install
 ## Authors
 
 - Jordan Ischard
+
+-->
