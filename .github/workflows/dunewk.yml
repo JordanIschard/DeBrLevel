@@ -33,11 +33,11 @@ jobs:
           dune build
 
       - name: doc
-        if: github.event_name == "push"
+        if: github.event_name == 'push'
         run: make coqdoc
 
       - name: Deploy to GitHub Pages
-        if: github.event_name == "push"
+        if: github.event_name == 'push'
         uses: crazy-max/ghaction-github-pages@v4
         with:
           target_branch: gh-pages
