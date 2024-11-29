@@ -20,7 +20,12 @@ jobs:
       - name: Setup dune
         uses: nmittu/setup-dune@v2
         with:
-          packages: "coq coq-mmaps"
+          packages: "coq"
+
+      - name: Add MMaps
+        run: |
+          opam repo add coq-released https://coq.inria.fr/opam/released
+          opam install coq-mmaps
 
       - name: build
         run: |
