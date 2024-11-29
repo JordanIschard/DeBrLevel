@@ -33,7 +33,6 @@ jobs:
           dune build
 
       - name: doc
-        if: github.event_name == 'push'
         run: |
           ls -a
           coq_makefile --help
