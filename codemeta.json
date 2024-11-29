@@ -1,0 +1,55 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "type": "SoftwareSourceCode",
+  "applicationCategory": "Computer Science",
+  "author": [
+      {
+          "id": "https://orcid.org/0000-0003-0505-641X",
+          "type": "Person",
+          "affiliation": {
+              "type": "Organization",
+              "name": "LIFO, University of Orleans"
+          },
+          "email": "jordan.ischard@univ-orleans.fr",
+          "familyName": "Ischard",
+          "givenName": "Jordan"
+      },
+      {
+          "type": "Role",
+          "schema:author": "https://orcid.org/0000-0003-0505-641X",
+          "roleName": "Developer",
+          "startDate": "2024-11-29"
+      }
+  ],
+  "codeRepository": "https://github.com/JordanIschard/DeBrLevel",
+  "contributor": {
+      "id": "https://orcid.org/0009-0000-3037-305X",
+      "type": "Person",
+      "affiliation": {
+          "type": "Organization",
+          "name": "LIFO, University of Orleans"
+      },
+      "email": "terence.clastres@univ-orleans.fr",
+      "familyName": "Clastres",
+      "givenName": "Térence"
+  },
+  "dateCreated": "2024-11-29",
+  "dateModified": "2024-11-29",
+  "datePublished": "2024-11-29",
+  "description": "This library is a collection of interfaces, implementations and functions that can help you in yours use of De Bruijn levels.",
+  "identifier": "https://archive.softwareheritage.org/swh:1:dir:3deb685c23b7fe8e370f52f2e7835b247bd8f2e3;origin=https://doi.org/10.5281/zenodo.14245079;visit=swh:1:snp:3e442df37a1a6d271494981831848c13074573ce;anchor=swh:1:rel:53f7c0f212b3b35a843eb57d9b8ab8a1a1304809;path=/JordanIschard-DeBrLevel-271a8f2/",
+  "keywords": [
+      "Verification",
+      "mechanized proofs"
+  ],
+  "license": "https://spdx.org/licenses/GPL-3.0+",
+  "name": "DeBrLevel",
+  "operatingSystem": "Linux",
+  "programmingLanguage": "Coq",
+  "version": "1.0.0",
+  "codemeta:contIntegration": {
+      "id": "https://github.com/JordanIschard/DeBrLevel"
+  },
+  "continuousIntegration": "https://github.com/JordanIschard/DeBrLevel",
+  "issueTracker": "https://github.com/JordanIschard/DeBrLevel/issues"
+}
