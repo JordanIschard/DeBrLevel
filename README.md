@@ -1,4 +1,4 @@
-# _Support library_ for using De Bruijn levels (version 1.0)
+# _Support library_ for using De Bruijn levels
 
 ## Introduction
 

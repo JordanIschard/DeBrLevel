@@ -1,6 +1,6 @@
 (lang dune 3.12)
 (using coq 0.8)
-(version 1.0)
+(version 1.0.1)
 
 (name coq-debr-lvl)
 

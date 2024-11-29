@@ -40,13 +40,14 @@
   "identifier": "https://archive.softwareheritage.org/swh:1:dir:3deb685c23b7fe8e370f52f2e7835b247bd8f2e3;origin=https://doi.org/10.5281/zenodo.14245079;visit=swh:1:snp:3e442df37a1a6d271494981831848c13074573ce;anchor=swh:1:rel:53f7c0f212b3b35a843eb57d9b8ab8a1a1304809;path=/JordanIschard-DeBrLevel-271a8f2/",
   "keywords": [
       "Verification",
-      "mechanized proofs"
+      "Mechanized proofs",
+      "De Bruijn representation"
   ],
   "license": "https://spdx.org/licenses/GPL-3.0+",
   "name": "DeBrLevel",
   "operatingSystem": "Linux",
   "programmingLanguage": "Coq",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "codemeta:contIntegration": {
       "id": "https://github.com/JordanIschard/DeBrLevel"
   },
