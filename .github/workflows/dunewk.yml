@@ -31,6 +31,7 @@ jobs:
         run: |
           eval $(opam config env)
           dune build
+          coq_makefile --help
 
       - name: doc
         if: github.event_name == 'push'
