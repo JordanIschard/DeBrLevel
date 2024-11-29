@@ -21,7 +21,6 @@ jobs:
         uses: nmittu/setup-dune@v2
         with:
           packages: "coq coq-mmaps"
-          compiler: "5.0.1"
 
       - name: build
         run: |
