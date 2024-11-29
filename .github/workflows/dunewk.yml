@@ -13,8 +13,7 @@ jobs:
 
     runs-on: 'ubuntu-latest'
 
-    permissions:
-      pages: write
+    permissions: write-all
 
     steps:
       - name: Checkout repository
