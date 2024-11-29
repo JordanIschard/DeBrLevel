@@ -35,7 +35,9 @@ jobs:
 
       - name: doc
         if: github.event_name == 'push'
-        run: make coqdoc
+        run: |
+          make
+          make coqdoc
 
       - name: Deploy to GitHub Pages
         if: github.event_name == 'push'
