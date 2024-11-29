@@ -320,7 +320,7 @@ function toggleProofs(){
     var url = "/" + window.location.pathname;
     var basename = url.substring(url.lastIndexOf('/')+1, url.lastIndexOf('.'));
     if (basename === "toc") {document.title = "Table of Contents";}
-    else if (basename === "indexpage") {document.title = "Index";}
+    else if (basename === "index") {document.title = "Index";}
     else {document.title = basename;}
   }
   
@@ -365,7 +365,7 @@ function fixTitle(){
   var url = "/" + window.location.pathname;
   var basename = url.substring(url.lastIndexOf('/')+1, url.lastIndexOf('.'));
   if (basename === "toc") {document.title = "Table of Contents";}
-  else if (basename === "indexpage") {document.title = "Index";}
+  else if (basename === "index") {document.title = "Index";}
   else {document.title = basename;}
 }
 
