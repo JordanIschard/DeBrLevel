@@ -20,7 +20,7 @@ jobs:
       - name: Setup dune
         uses: nmittu/setup-dune@v2
         with:
-          packages: "coq coq-prover"
+          packages: "coq"
 
       - name: Add MMaps
         run: |
