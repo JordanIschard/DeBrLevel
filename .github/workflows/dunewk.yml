@@ -31,3 +31,16 @@ jobs:
         run: |
           eval $(opam config env)
           dune build
+
+      - name: doc
+        if: github.event_name == "push"
+        run: make coqdoc
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == "push"
+        uses: crazy-max/ghaction-github-pages@v4
+        with:
+          target_branch: gh-pages
+          build_dir: doc/html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
