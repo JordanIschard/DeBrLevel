@@ -167,7 +167,7 @@ Parameter new_key_Add_max : Add v s s' -> new_key s' = max (S v) (new_key s).
 
 Parameter new_key_add_max : new_key (add v s) = max (S v) (new_key s). 
 
-Parameter new_key_in_spec : In v s -> (v < new_key s)%nat.
+Parameter new_key_in : In v s -> (v < new_key s)%nat.
 
 (** **** [shift] specifications *)
 

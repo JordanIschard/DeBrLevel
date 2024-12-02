@@ -118,7 +118,7 @@ Proof.
   apply new_key_add_max.
 Qed.
 
-Lemma new_key_in_spec (v: elt) (s: t) : In v s -> (v < new_key s)%nat.
+Lemma new_key_in (v: elt) (s: t) : In v s -> (v < new_key s)%nat.
 Proof.
   revert v.
   induction s using set_induction; intros b HIn.
