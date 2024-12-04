@@ -161,6 +161,22 @@ Proof.
     -- rewrite shift_notin_iff in H; eauto.
 Qed.
 
+Lemma shift_new_refl (lb k: Lvl.t) (t: t) :
+  lb >= (new_key t) -> new_key (shift lb k t) = new_key t.
+Proof.
+  induction t using set_induction; intros Hge.
+  - rewrite shift_Empty; auto.
+    rewrite new_key_empty.
+    now rewrite new_key_Empty.
+  - apply Add_inv in H0; subst.
+    rewrite shift_add_notin; auto.
+    rewrite new_key_add_max in *.
+    rewrite new_key_add_max.
+    destruct IHt1; try lia.
+    rewrite Level.shift_wf_refl; auto.
+    unfold Level.Wf; lia.
+Qed.
+
 End Levels.
 
 

@@ -177,6 +177,8 @@ Parameter shift_permute_1 :
 Parameter shift_permute_2 :
   m <= n -> eq (shift m k (shift n p s)) (shift (n + k) p (shift m k s)).
 
+Parameter shift_new_refl : m >= (new_key s) -> new_key (shift m k s) = new_key s.
+
 End specifications.
 
 End IsLvlSetLVLInterface.
