@@ -1,6 +1,6 @@
 (lang dune 3.12)
 (using coq 0.8)
-(version 1.0.1)
+(version 1.0.2)
 
 (name coq-debr-lvl)
 
@@ -8,7 +8,7 @@
 
   (name coq-debr-lvl)
 
-  (synopsis "Collection of interfaces and implementations for a modular using of De Bruijn level.")
+  (synopsis "Collection of interfaces and implementations for a modular using of De Bruijn level")
 
   (description 
     "Formalization of a language often implies variables or equivalent. A specific representation of them is required in order 
@@ -18,7 +18,7 @@
   )
 
 
-  (license GNU-GPL)
+  (license GPL-3.0-or-later)
 
   (depends
     (coq (= 8.18.0))
