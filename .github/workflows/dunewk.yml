@@ -13,16 +13,30 @@ jobs:
 
     runs-on: 'ubuntu-latest'
 
+    strategy:
+      matrix:
+        coq_version:
+          - '8.20.1'
+        ocaml_version:
+          - '4.14.1'
+
     permissions: write-all
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup dune
-        uses: nmittu/setup-dune@v2
+
+      - name: Set-up OCaml
+        uses: ocaml/setup-ocaml@v3
         with:
-          packages: "coq"
+          ocaml-compiler: ${{ matrix.ocaml_version }}
+
+      - name: Setup Dune
+        run: |
+          opam pin add coq ${{ matrix.coq_version }}
+          opam install coq 
+          opam install dune
 
       - name: Add MMaps
         run: |
