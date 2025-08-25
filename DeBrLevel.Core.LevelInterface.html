@@ -1,0 +1,524 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link href="resources/coqdoc.css" rel="stylesheet" type="text/css" />
+<link href="resources/coqdocjs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resources/config.js"></script>
+<script type="text/javascript" src="resources/coqdocjs.js"></script>
+</head>
+
+<body onload="document.getElementById('content').focus()">
+  <div id="header">
+    <span class="left">
+      <span class="modulename"> <script> document.write(document.title) </script> </span>
+    </span>
+
+    <span class="button" id="toggle-proofs"></span>
+
+    <span class="right">
+      <a href="./index.html"> Index </a>
+      <a href="./toc.html"> Table of Contents </a>
+      <a href="https://github.com/JordanIschard/DeBrLevel">Project</a>
+      <a href="https://jordanischard.github.io/">Author</a>
+    </span>
+</div>
+    <div id="content" tabindex="-1" onblur="document.getElementById('content').focus()">
+    <div id="main">
+<div class="code">
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.MSets.MSets.html#"><span class="id" title="library">MSets</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#"><span class="id" title="library">Structures.Equalities</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#"><span class="id" title="library">Structures.Orders</span></a>.<br/>
+<span class="id" title="keyword">Import</span> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#"><span class="id" title="module">Structures.Equalities</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#"><span class="id" title="module">Structures.Orders</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab8"></a><h1 class="section">Interface - Level</h1>
+
+
+<div class="paragraph"> </div>
+
+  De-Bruijn has proposed a variation of the lambda calculus which instanciates variables in a determinisc way. It defines two measures: the distance and the level. The distance, latter called index, is the number of abstraction between a variable and its binder. The level is the number of abstraction encountered since the root of the representative tree of a term.
+
+<div class="paragraph"> </div>
+
+  For instance, λx.(λy.(x y) x) is equal to λ.(λ.(1 0) 0) with distances and λ.(λ.(0 1) 0) with levels.
+
+<div class="paragraph"> </div>
+
+  This kind of representations are extremely simple and can be used in different context as well as be embedded in data types or data structures.
+
+<div class="paragraph"> </div>
+
+<a id="lab9"></a><h2 class="section">Level - Definition</h2>
+
+
+<div class="paragraph"> </div>
+
+  A level itself only requires to be ordered. We require also a ground value and classic arithmetic operators on it. Thus, we define a level as a <span class="inlinecode"><span class="id" title="library">Nat</span></span>.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <a id="Lvl" class="idref" href="#Lvl"><span class="id" title="module">Lvl</span></a> &lt;: <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#OrderedTypeFull"><span class="id" title="module">Orders.OrderedTypeFull</span></a> := <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.OrdersEx.html#Nat_as_OT"><span class="id" title="module">Structures.OrdersEx.Nat_as_OT</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<hr/>
+ 
+<div class="paragraph"> </div>
+
+<a id="lab10"></a><h2 class="section">Well-formedness and Shift interfaces</h2>
+
+
+<div class="paragraph"> </div>
+
+  We split the definition of an element that used levels in different module types. First, we want to be as flexible as possible. Second, each modules types carries an additional set of constraints.
+
+<div class="paragraph"> </div>
+
+  We define a function called <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.shift"><span class="id" title="definition">shift</span></a></span> and a property called <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span>. It is the minimal set of elements for working with levels. Their principles ared defined below.
+
+<div class="paragraph"> </div>
+
+<a id="lab11"></a><h3 class="section">Well-formedness</h3>
+
+
+<div class="paragraph"> </div>
+
+  If we define an inductive type as containing levels, the questioning about the well-formation or ill-formation appears. Thus we suppose a property <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span>, defined by the user later, which is satisfied if the instanciation is well-formed.
+
+<div class="paragraph"> </div>
+
+  What is a well-formed type? If we take the most basic case, a level, when can we state that a level is well-formed or not ? We can only talk about a well-formed level regards of a lower bound <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetLVLInterface.specifications.m"><span class="id" title="variable">m</span></a></span>. 
+
+<div class="paragraph"> </div>
+
+  We use the case of the lambda calculus to illustrate it. Consider the term "x", the variable is free. Thus, how do we state that it is a well-formed term? We suppose that "x" is defined in a certain context. Now, consider the term "λx.(x y)". "y" is free and "x" bound. The term is well-formed if "y" is defined in a certain context. The lower bound can be here understood as 
+  the number of free variables.
+
+<div class="paragraph"> </div>
+
+<a id="lab12"></a><h4 class="section"><span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span> property interface</h4>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsWF" class="idref" href="#IsWF"><span class="id" title="module">IsWF</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsWF.Wf" class="idref" href="#IsWF.Wf"><span class="id" title="axiom">Wf</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <span class="id" title="keyword">Prop</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsWF.Wf_weakening" class="idref" href="#IsWF.Wf_weakening"><span class="id" title="axiom">Wf_weakening</span></a> : <span class="id" title="keyword">∀</span> (<a id="m:3" class="idref" href="#m:3"><span class="id" title="binder">m</span></a> <a id="n:4" class="idref" href="#n:4"><span class="id" title="binder">n</span></a>: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a>) (<a id="t:5" class="idref" href="#t:5"><span class="id" title="binder">t</span></a>: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a>), <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.le"><span class="id" title="definition">Lvl.le</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:3"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#n:4"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:3"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:5"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#n:4"><span class="id" title="variable">n</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:5"><span class="id" title="variable">t</span></a>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="var">Declare</span> <span class="id" title="keyword">Instance</span> <a id="IsWF.Wf_iff" class="idref" href="#IsWF.Wf_iff"><span class="id" title="instance">Wf_iff</span></a> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#Proper"><span class="id" title="class">Proper</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.eq"><span class="id" title="definition">Lvl.eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#iff"><span class="id" title="definition">iff</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF.Wf"><span class="id" title="axiom">Wf</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF"><span class="id" title="module">IsWF</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab13"></a><h4 class="section">Boolean version of <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span> named <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlFullSet.is_wf"><span class="id" title="definition">is_wf</span></a></span></h4>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsWFb" class="idref" href="#IsWFb"><span class="id" title="module">IsWFb</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsWFb.is_wf" class="idref" href="#IsWFb.is_wf"><span class="id" title="axiom">is_wf</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Datatypes.html#bool"><span class="id" title="inductive">bool</span></a>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="var">Declare</span> <span class="id" title="keyword">Instance</span> <a id="IsWFb.is_wf_eq" class="idref" href="#IsWFb.is_wf_eq"><span class="id" title="instance">is_wf_eq</span></a> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#Proper"><span class="id" title="class">Proper</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.eq"><span class="id" title="definition">Lvl.eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#eq"><span class="id" title="inductive">Logic.eq</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFb.is_wf"><span class="id" title="axiom">is_wf</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFb"><span class="id" title="module">IsWFb</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab14"></a><h4 class="section"><span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span> property with its boolean version <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlFullSet.is_wf"><span class="id" title="definition">is_wf</span></a></span></h4>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsWFFull" class="idref" href="#IsWFFull"><span class="id" title="module">IsWFFull</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>) (<span class="id" title="keyword">Import</span> <span class="id" title="var">V</span> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF"><span class="id" title="module">IsWF</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>) &lt;: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFb"><span class="id" title="module">IsWFb</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFb"><span class="id" title="module">IsWFb</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Section</span> <a id="IsWFFull.specs" class="idref" href="#IsWFFull.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Variable</span> <a id="IsWFFull.specs.k" class="idref" href="#IsWFFull.specs.k"><span class="id" title="variable">k</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a>.<br/>
+<span class="id" title="keyword">Variable</span> <a id="IsWFFull.specs.t" class="idref" href="#IsWFFull.specs.t"><span class="id" title="variable">t</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsWFFull.specs.Wf_is_wf_true" class="idref" href="#IsWFFull.specs.Wf_is_wf_true"><span class="id" title="variable">Wf_is_wf_true</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#V.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'&lt;-&gt;'_x"><span class="id" title="notation">↔</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.is_wf"><span class="id" title="axiom">is_wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Datatypes.html#true"><span class="id" title="constructor">true</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsWFFull.specs.notWf_is_wf_false" class="idref" href="#IsWFFull.specs.notWf_is_wf_false"><span class="id" title="variable">notWf_is_wf_false</span></a> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#63a68285c81db8f9bc456233bb9ed181"><span class="id" title="notation">¬</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#V.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'&lt;-&gt;'_x"><span class="id" title="notation">↔</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.is_wf"><span class="id" title="axiom">is_wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Datatypes.html#false"><span class="id" title="constructor">false</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab15"></a><h3 class="section">Shift function</h3>
+
+
+<div class="paragraph"> </div>
+
+  Like indices, we will often shift levels. Consequently, we ask to the user to define a <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.shift"><span class="id" title="definition">shift</span></a></span> function. This function takes three arguments: the lower bound <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetLVLInterface.specifications.m"><span class="id" title="variable">m</span></a></span>, the shift <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetLVLInterface.specifications.k"><span class="id" title="variable">k</span></a></span> and the leveled element <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetInterface.specs.t"><span class="id" title="variable">t</span></a></span>. The lower bound has the same meaning that the one in the <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span> property. In lambda calculus, we can say that we shift only bound variables knowing a certain number of free variables. It is a main difference with indices. Indeed, free variables have a fix level defined. Thus, no need to shift them. For instance, the shift function interacts as shown below with the levels.
+<pre>
+shift 0 2 2 = 4
+shift 3 2 2 = 2
+shift 65 0 98 = 98
+</pre>
+
+<div class="paragraph"> </div>
+
+  In a lambda calculus term, we can see the use of <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetLVLInterface.specifications.m"><span class="id" title="variable">m</span></a></span>.
+<pre>
+shift 1 3 (\. 0 1) = (\. 0 4)
+</pre>
+
+<div class="paragraph"> </div>
+
+<a id="lab16"></a><h4 class="section"><span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.shift"><span class="id" title="definition">shift</span></a></span> function interface</h4>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="HasShift" class="idref" href="#HasShift"><span class="id" title="module">HasShift</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.shift" class="idref" href="#HasShift.shift"><span class="id" title="axiom">shift</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Section</span> <a id="HasShift.specs" class="idref" href="#HasShift.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Variable</span> <a id="HasShift.specs.m" class="idref" href="#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a id="HasShift.specs.n" class="idref" href="#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a id="HasShift.specs.k" class="idref" href="#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a id="HasShift.specs.p" class="idref" href="#HasShift.specs.p"><span class="id" title="variable">p</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a>.<br/>
+<span class="id" title="keyword">Variable</span> <a id="HasShift.specs.t" class="idref" href="#HasShift.specs.t"><span class="id" title="variable">t</span></a> <a id="HasShift.specs.t'" class="idref" href="#HasShift.specs.t'"><span class="id" title="variable">t'</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_zero_refl" class="idref" href="#HasShift.specs.shift_zero_refl"><span class="id" title="variable">shift_zero_refl</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> 0 <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_trans" class="idref" href="#HasShift.specs.shift_trans"><span class="id" title="variable">shift_trans</span></a>     : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>)) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#0dacc1786c5ba797d47dd85006231633"><span class="id" title="notation">+</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_permute" class="idref" href="#HasShift.specs.shift_permute"><span class="id" title="variable">shift_permute</span></a>   : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>)) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>)).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_unfold" class="idref" href="#HasShift.specs.shift_unfold"><span class="id" title="variable">shift_unfold</span></a>    : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#0dacc1786c5ba797d47dd85006231633"><span class="id" title="notation">+</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#0dacc1786c5ba797d47dd85006231633"><span class="id" title="notation">+</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>)).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_unfold_1" class="idref" href="#HasShift.specs.shift_unfold_1"><span class="id" title="variable">shift_unfold_1</span></a>  : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a>) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a>  (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>)) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.n"><span class="id" title="variable">n</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="HasShift.specs.shift_eq_iff" class="idref" href="#HasShift.specs.shift_eq_iff"><span class="id" title="variable">shift_eq_iff</span></a>    : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t'"><span class="id" title="variable">t'</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'&lt;-&gt;'_x"><span class="id" title="notation">↔</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t"><span class="id" title="variable">t</span></a>) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs.t'"><span class="id" title="variable">t'</span></a>).<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="var">Declare</span> <span class="id" title="keyword">Instance</span> <a id="HasShift.shift_eq" class="idref" href="#HasShift.shift_eq"><span class="id" title="instance">shift_eq</span></a> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#Proper"><span class="id" title="class">Proper</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.eq"><span class="id" title="definition">Lvl.eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.eq"><span class="id" title="definition">Lvl.eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Classes.Morphisms.html#8dc5652698a6e16f72dd37bd17d3b973"><span class="id" title="notation">==&gt;</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.shift"><span class="id" title="axiom">shift</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift"><span class="id" title="module">HasShift</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<hr/>
+ 
+<div class="paragraph"> </div>
+
+<a id="lab17"></a><h2 class="section">Leveled Module Type</h2>
+
+
+<div class="paragraph"> </div>
+
+  A type <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetInterface.specs.t"><span class="id" title="variable">t</span></a></span> that uses levels have to implements this module type.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveled" class="idref" href="#IsLeveled"><span class="id" title="module">IsLeveled</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>) &lt;: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift"><span class="id" title="module">HasShift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a> &lt;: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF"><span class="id" title="module">IsWF</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#HasShift"><span class="id" title="module">HasShift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWF"><span class="id" title="module">IsWF</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Section</span> <a id="IsLeveled.specs" class="idref" href="#IsLeveled.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Variable</span> <a id="IsLeveled.specs.m" class="idref" href="#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a id="IsLeveled.specs.n" class="idref" href="#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a id="IsLeveled.specs.k" class="idref" href="#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a id="IsLeveled.specs.p" class="idref" href="#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#Lvl.t"><span class="id" title="definition">Lvl.t</span></a>.<br/>
+<span class="id" title="keyword">Variable</span> <a id="IsLeveled.specs.t" class="idref" href="#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.t"><span class="id" title="axiom">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsLeveled.specs.shift_preserves_wf_gen" class="idref" href="#IsLeveled.specs.shift_preserves_wf_gen"><span class="id" title="variable">shift_preserves_wf_gen</span></a> :<br/>
+&nbsp;&nbsp;<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a><br/>
+&nbsp;&nbsp;<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsLeveled.specs.shift_preserves_wf" class="idref" href="#IsLeveled.specs.shift_preserves_wf"><span class="id" title="variable">shift_preserves_wf</span></a>   : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#0dacc1786c5ba797d47dd85006231633"><span class="id" title="notation">+</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a>) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsLeveled.specs.shift_preserves_wf_1" class="idref" href="#IsLeveled.specs.shift_preserves_wf_1"><span class="id" title="variable">shift_preserves_wf_1</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#0dacc1786c5ba797d47dd85006231633"><span class="id" title="notation">+</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a>) (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.p"><span class="id" title="variable">p</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsLeveled.specs.shift_preserves_wf_2" class="idref" href="#IsLeveled.specs.shift_preserves_wf_2"><span class="id" title="variable">shift_preserves_wf_2</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#cb53cf0ee22c036a03b4a9281c68b5a3"><span class="id" title="notation">≤</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.n"><span class="id" title="variable">n</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Peano.html#::nat_scope:x_'-'_x"><span class="id" title="notation">-</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.m"><span class="id" title="variable">m</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsLeveled.specs.shift_preserves_wf_zero" class="idref" href="#IsLeveled.specs.shift_preserves_wf_zero"><span class="id" title="variable">shift_preserves_wf_zero</span></a> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.k"><span class="id" title="variable">k</span></a> 0 <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs.t"><span class="id" title="variable">t</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled.specs"><span class="id" title="section">specs</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab18"></a><h2 class="section">Bindless Leveled Module Type</h2>
+
+
+<div class="paragraph"> </div>
+
+  A type <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevelInterface.html#IsLvlSetInterface.specs.t"><span class="id" title="variable">t</span></a></span> that uses levels without binders has a specific property. The <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.shift"><span class="id" title="definition">shift</span></a></span> function did not
+  impact the type if it shares the same lower bound with the <span class="inlinecode"><a class="idref" href="DeBrLevel.Set.SetLevel.html#IsLvlSet.Wf"><span class="id" title="definition">Wf</span></a></span> property.
+  This kind of types is common actually. A set, a map or a pair does not imply binders.
+
+<div class="paragraph"> </div>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveled" class="idref" href="#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>) &lt;: <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsBindlessLeveled.shift_wf_refl" class="idref" href="#IsBindlessLeveled.shift_wf_refl"><span class="id" title="axiom">shift_wf_refl</span></a> : <span class="id" title="keyword">∀</span> <a id="m:64" class="idref" href="#m:64"><span class="id" title="binder">m</span></a> <a id="k:65" class="idref" href="#k:65"><span class="id" title="binder">k</span></a> <a id="t:66" class="idref" href="#t:66"><span class="id" title="binder">t</span></a>, <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:64"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:66"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:64"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#k:65"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:66"><span class="id" title="variable">t</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:66"><span class="id" title="variable">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledEx" class="idref" href="#IsBindlessLeveledEx"><span class="id" title="module">IsBindlessLeveledEx</span></a> (<span class="id" title="keyword">Import</span> <span class="id" title="var">T</span> : <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>) (<span class="id" title="keyword">Import</span> <span class="id" title="var">IsLvl</span> : <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T"><span class="id" title="module">T</span></a>).<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="IsBindlessLeveledEx.shift_wf_refl" class="idref" href="#IsBindlessLeveledEx.shift_wf_refl"><span class="id" title="axiom">shift_wf_refl</span></a> : <span class="id" title="keyword">∀</span> <a id="m:69" class="idref" href="#m:69"><span class="id" title="binder">m</span></a> <a id="k:70" class="idref" href="#k:70"><span class="id" title="binder">k</span></a> <a id="t:71" class="idref" href="#t:71"><span class="id" title="binder">t</span></a>, <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLvl.Wf"><span class="id" title="axiom">Wf</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:69"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:71"><span class="id" title="variable">t</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#T.eq"><span class="id" title="axiom">eq</span></a> (<a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLvl.shift"><span class="id" title="axiom">shift</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#m:69"><span class="id" title="variable">m</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#k:70"><span class="id" title="variable">k</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:71"><span class="id" title="variable">t</span></a>) <a class="idref" href="DeBrLevel.Core.LevelInterface.html#t:71"><span class="id" title="variable">t</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledEx"><span class="id" title="module">IsBindlessLeveledEx</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<hr/>
+ 
+<div class="paragraph"> </div>
+
+<a id="lab19"></a><h2 class="section">Interfaces with <i>leibniz equality</i> extension</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="EqualityTypeWithLeibniz" class="idref" href="#EqualityTypeWithLeibniz"><span class="id" title="module">EqualityTypeWithLeibniz</span></a> &lt;: <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#Eq"><span class="id" title="module">Eq</span></a> &lt;+ <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#IsEq"><span class="id" title="module">IsEq</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="EqualityTypeWithLeibniz.eq_leibniz" class="idref" href="#EqualityTypeWithLeibniz.eq_leibniz"><span class="id" title="axiom">eq_leibniz</span></a> : <span class="id" title="keyword">∀</span> <a id="x:74" class="idref" href="#x:74"><span class="id" title="binder">x</span></a> <a id="y:75" class="idref" href="#y:75"><span class="id" title="binder">y</span></a>, <a class="idref" href="DeBrLevel.Core.LevelInterface.html#EqualityTypeWithLeibniz.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:74"><span class="id" title="variable">x</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:75"><span class="id" title="variable">y</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:74"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:75"><span class="id" title="variable">y</span></a>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="keyword">Hint</span> <span class="id" title="keyword">Immediate</span> <span class="id" title="var">eq_sym</span> : <span class="id" title="var">core</span>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="keyword">Hint</span> <span class="id" title="keyword">Resolve</span> <span class="id" title="var">eq_refl</span> <span class="id" title="var">eq_trans</span> : <span class="id" title="var">core</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#EqualityTypeWithLeibniz"><span class="id" title="module">EqualityTypeWithLeibniz</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="DecidableTypeWithLeibniz" class="idref" href="#DecidableTypeWithLeibniz"><span class="id" title="module">DecidableTypeWithLeibniz</span></a> &lt;: <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#DecidableType"><span class="id" title="module">DecidableType</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#Eq"><span class="id" title="module">Eq</span></a> &lt;+ <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#IsEq"><span class="id" title="module">IsEq</span></a> &lt;+ <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#HasEqDec"><span class="id" title="module">HasEqDec</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="DecidableTypeWithLeibniz.eq_leibniz" class="idref" href="#DecidableTypeWithLeibniz.eq_leibniz"><span class="id" title="axiom">eq_leibniz</span></a> : <span class="id" title="keyword">∀</span> <a id="x:78" class="idref" href="#x:78"><span class="id" title="binder">x</span></a> <a id="y:79" class="idref" href="#y:79"><span class="id" title="binder">y</span></a>, <a class="idref" href="DeBrLevel.Core.LevelInterface.html#DecidableTypeWithLeibniz.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:78"><span class="id" title="variable">x</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:79"><span class="id" title="variable">y</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:78"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:79"><span class="id" title="variable">y</span></a>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="keyword">Hint</span> <span class="id" title="keyword">Immediate</span> <span class="id" title="var">eq_sym</span> : <span class="id" title="var">core</span>.<br/>
+
+<br/>
+#[<span class="id" title="var">export</span>] <span class="id" title="keyword">Hint</span> <span class="id" title="keyword">Resolve</span> <span class="id" title="var">eq_refl</span> <span class="id" title="var">eq_trans</span> : <span class="id" title="var">core</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#DecidableTypeWithLeibniz"><span class="id" title="module">DecidableTypeWithLeibniz</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+  This module is the same as in MSet. It allows to define ordered type with its own equality with
+  an equivalence with the leibniz equality.
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="OrderedTypeWithLeibniz" class="idref" href="#OrderedTypeWithLeibniz"><span class="id" title="module">OrderedTypeWithLeibniz</span></a> &lt;: <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#OrderedType"><span class="id" title="module">Orders.OrderedType</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Include</span> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#OrderedType"><span class="id" title="module">Orders.OrderedType</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Parameter</span> <a id="OrderedTypeWithLeibniz.eq_leibniz" class="idref" href="#OrderedTypeWithLeibniz.eq_leibniz"><span class="id" title="axiom">eq_leibniz</span></a> : <span class="id" title="keyword">∀</span> <a id="x:82" class="idref" href="#x:82"><span class="id" title="binder">x</span></a> <a id="y:83" class="idref" href="#y:83"><span class="id" title="binder">y</span></a>, <a class="idref" href="DeBrLevel.Core.LevelInterface.html#OrderedTypeWithLeibniz.eq"><span class="id" title="axiom">eq</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:82"><span class="id" title="variable">x</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:83"><span class="id" title="variable">y</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#::type_scope:x_'-&gt;'_x"><span class="id" title="notation">→</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#x:82"><span class="id" title="variable">x</span></a> <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Init.Logic.html#6cd0f7b28b6092304087c7049437bb1a"><span class="id" title="notation">=</span></a> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#y:83"><span class="id" title="variable">y</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">End</span> <a class="idref" href="DeBrLevel.Core.LevelInterface.html#OrderedTypeWithLeibniz"><span class="id" title="module">OrderedTypeWithLeibniz</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<hr/>
+ 
+<div class="paragraph"> </div>
+
+<a id="lab20"></a><h2 class="section">Collection of starter interfaces</h2>
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvl" class="idref" href="#IsLvl"><span class="id" title="module">IsLvl</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvl" class="idref" href="#IsBdlLvl"><span class="id" title="module">IsBdlLvl</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab21"></a><h3 class="section">EqualityType interface</h3>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledET" class="idref" href="#IsLeveledET"><span class="id" title="module">IsLeveledET</span></a> :=  <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledETWithLeibniz" class="idref" href="#IsLeveledETWithLeibniz"><span class="id" title="module">IsLeveledETWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#EqualityTypeWithLeibniz"><span class="id" title="module">EqualityTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledET" class="idref" href="#IsBindlessLeveledET"><span class="id" title="module">IsBindlessLeveledET</span></a> :=  <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledETWithLeibniz" class="idref" href="#IsBindlessLeveledETWithLeibniz"><span class="id" title="module">IsBindlessLeveledETWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#EqualityTypeWithLeibniz"><span class="id" title="module">EqualityTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullET" class="idref" href="#IsLeveledFullET"><span class="id" title="module">IsLeveledFullET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledET"><span class="id" title="module">IsLeveledET</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullETWithLeibniz" class="idref" href="#IsLeveledFullETWithLeibniz"><span class="id" title="module">IsLeveledFullETWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledETWithLeibniz"><span class="id" title="module">IsLeveledETWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullET" class="idref" href="#IsBindlessLeveledFullET"><span class="id" title="module">IsBindlessLeveledFullET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledET"><span class="id" title="module">IsBindlessLeveledET</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullETWithLeibniz" class="idref" href="#IsBindlessLeveledFullETWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullETWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledETWithLeibniz"><span class="id" title="module">IsBindlessLeveledETWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlET" class="idref" href="#IsLvlET"><span class="id" title="module">IsLvlET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledET"><span class="id" title="module">IsLeveledET</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlETWL" class="idref" href="#IsLvlETWL"><span class="id" title="module">IsLvlETWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledETWithLeibniz"><span class="id" title="module">IsLeveledETWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullET" class="idref" href="#IsLvlFullET"><span class="id" title="module">IsLvlFullET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullET"><span class="id" title="module">IsLeveledFullET</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullETWL" class="idref" href="#IsLvlFullETWL"><span class="id" title="module">IsLvlFullETWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullETWithLeibniz"><span class="id" title="module">IsLeveledFullETWithLeibniz</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlET" class="idref" href="#IsBdlLvlET"><span class="id" title="module">IsBdlLvlET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledET"><span class="id" title="module">IsBindlessLeveledET</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlETWL" class="idref" href="#IsBdlLvlETWL"><span class="id" title="module">IsBdlLvlETWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledETWithLeibniz"><span class="id" title="module">IsBindlessLeveledETWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullET" class="idref" href="#IsBdlLvlFullET"><span class="id" title="module">IsBdlLvlFullET</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullET"><span class="id" title="module">IsBindlessLeveledFullET</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullETWL" class="idref" href="#IsBdlLvlFullETWL"><span class="id" title="module">IsBdlLvlFullETWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullETWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullETWithLeibniz</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab22"></a><h3 class="section">DecidableType interface</h3>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledDT" class="idref" href="#IsLeveledDT"><span class="id" title="module">IsLeveledDT</span></a> :=  <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a> &lt;+ <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#HasEqDec"><span class="id" title="module">HasEqDec</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledDTWithLeibniz" class="idref" href="#IsLeveledDTWithLeibniz"><span class="id" title="module">IsLeveledDTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#DecidableTypeWithLeibniz"><span class="id" title="module">DecidableTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledDT" class="idref" href="#IsBindlessLeveledDT"><span class="id" title="module">IsBindlessLeveledDT</span></a> :=  <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#EqualityType"><span class="id" title="module">EqualityType</span></a> &lt;+ <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Equalities.html#HasEqDec"><span class="id" title="module">HasEqDec</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledDTWithLeibniz" class="idref" href="#IsBindlessLeveledDTWithLeibniz"><span class="id" title="module">IsBindlessLeveledDTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#DecidableTypeWithLeibniz"><span class="id" title="module">DecidableTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullDT" class="idref" href="#IsLeveledFullDT"><span class="id" title="module">IsLeveledFullDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledDT"><span class="id" title="module">IsLeveledDT</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullDTWithLeibniz" class="idref" href="#IsLeveledFullDTWithLeibniz"><span class="id" title="module">IsLeveledFullDTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledDTWithLeibniz"><span class="id" title="module">IsLeveledDTWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullDT" class="idref" href="#IsBindlessLeveledFullDT"><span class="id" title="module">IsBindlessLeveledFullDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledDT"><span class="id" title="module">IsBindlessLeveledDT</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullDTWithLeibniz" class="idref" href="#IsBindlessLeveledFullDTWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullDTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledDTWithLeibniz"><span class="id" title="module">IsBindlessLeveledDTWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlDT" class="idref" href="#IsLvlDT"><span class="id" title="module">IsLvlDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledDT"><span class="id" title="module">IsLeveledDT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlDTWL" class="idref" href="#IsLvlDTWL"><span class="id" title="module">IsLvlDTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledDTWithLeibniz"><span class="id" title="module">IsLeveledDTWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullDT" class="idref" href="#IsLvlFullDT"><span class="id" title="module">IsLvlFullDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullDT"><span class="id" title="module">IsLeveledFullDT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullDTWL" class="idref" href="#IsLvlFullDTWL"><span class="id" title="module">IsLvlFullDTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullDTWithLeibniz"><span class="id" title="module">IsLeveledFullDTWithLeibniz</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlDT" class="idref" href="#IsBdlLvlDT"><span class="id" title="module">IsBdlLvlDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledDT"><span class="id" title="module">IsBindlessLeveledDT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlDTWL" class="idref" href="#IsBdlLvlDTWL"><span class="id" title="module">IsBdlLvlDTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledDTWithLeibniz"><span class="id" title="module">IsBindlessLeveledDTWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullDT" class="idref" href="#IsBdlLvlFullDT"><span class="id" title="module">IsBdlLvlFullDT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullDT"><span class="id" title="module">IsBindlessLeveledFullDT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullDTWL" class="idref" href="#IsBdlLvlFullDTWL"><span class="id" title="module">IsBdlLvlFullDTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullDTWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullDTWithLeibniz</span></a>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab23"></a><h3 class="section">OrderedType interface</h3>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledOT" class="idref" href="#IsLeveledOT"><span class="id" title="module">IsLeveledOT</span></a> := <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#OrderedType"><span class="id" title="module">Orders.OrderedType</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledOTWithLeibniz" class="idref" href="#IsLeveledOTWithLeibniz"><span class="id" title="module">IsLeveledOTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#OrderedTypeWithLeibniz"><span class="id" title="module">OrderedTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveled"><span class="id" title="module">IsLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledOT" class="idref" href="#IsBindlessLeveledOT"><span class="id" title="module">IsBindlessLeveledOT</span></a> := <a class="idref" href="http://coq.inria.fr/doc/V8.20.1/stdlib//Coq.Structures.Orders.html#OrderedType"><span class="id" title="module">Orders.OrderedType</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledOTWithLeibniz" class="idref" href="#IsBindlessLeveledOTWithLeibniz"><span class="id" title="module">IsBindlessLeveledOTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#OrderedTypeWithLeibniz"><span class="id" title="module">OrderedTypeWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveled"><span class="id" title="module">IsBindlessLeveled</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullOT" class="idref" href="#IsLeveledFullOT"><span class="id" title="module">IsLeveledFullOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledOT"><span class="id" title="module">IsLeveledOT</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLeveledFullOTWithLeibniz" class="idref" href="#IsLeveledFullOTWithLeibniz"><span class="id" title="module">IsLeveledFullOTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledOTWithLeibniz"><span class="id" title="module">IsLeveledOTWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullOT" class="idref" href="#IsBindlessLeveledFullOT"><span class="id" title="module">IsBindlessLeveledFullOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledOT"><span class="id" title="module">IsBindlessLeveledOT</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBindlessLeveledFullOTWithLeibniz" class="idref" href="#IsBindlessLeveledFullOTWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullOTWithLeibniz</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledOTWithLeibniz"><span class="id" title="module">IsBindlessLeveledOTWithLeibniz</span></a> &lt;+ <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsWFFull"><span class="id" title="module">IsWFFull</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlOT" class="idref" href="#IsLvlOT"><span class="id" title="module">IsLvlOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledOT"><span class="id" title="module">IsLeveledOT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlOTWL" class="idref" href="#IsLvlOTWL"><span class="id" title="module">IsLvlOTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledOTWithLeibniz"><span class="id" title="module">IsLeveledOTWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullOT" class="idref" href="#IsLvlFullOT"><span class="id" title="module">IsLvlFullOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullOT"><span class="id" title="module">IsLeveledFullOT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsLvlFullOTWL" class="idref" href="#IsLvlFullOTWL"><span class="id" title="module">IsLvlFullOTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsLeveledFullOTWithLeibniz"><span class="id" title="module">IsLeveledFullOTWithLeibniz</span></a>.<br/>
+
+<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlOT" class="idref" href="#IsBdlLvlOT"><span class="id" title="module">IsBdlLvlOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledOT"><span class="id" title="module">IsBindlessLeveledOT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlOTWL" class="idref" href="#IsBdlLvlOTWL"><span class="id" title="module">IsBdlLvlOTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledOTWithLeibniz"><span class="id" title="module">IsBindlessLeveledOTWithLeibniz</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullOT" class="idref" href="#IsBdlLvlFullOT"><span class="id" title="module">IsBdlLvlFullOT</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullOT"><span class="id" title="module">IsBindlessLeveledFullOT</span></a>.<br/>
+<span class="id" title="keyword">Module</span> <span class="id" title="keyword">Type</span> <a id="IsBdlLvlFullOTWL" class="idref" href="#IsBdlLvlFullOTWL"><span class="id" title="module">IsBdlLvlFullOTWL</span></a> := <a class="idref" href="DeBrLevel.Core.LevelInterface.html#IsBindlessLeveledFullOTWithLeibniz"><span class="id" title="module">IsBindlessLeveledFullOTWithLeibniz</span></a>.<br/>
+</div>
+</div>
+<div id="footer">
+  Generated by <a href="http://coq.inria.fr/">coqdoc</a> and improved with <a href="https://github.com/tebbi/coqdocjs">CoqdocJS</a>
+</div>
+</div>
+</body>
+
+</html>
