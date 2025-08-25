@@ -328,6 +328,3 @@ Definition FV (k : Lvl.t) (x : L.t) (e : Lambda.t) := k ⊢ e -> In x e /\ x < k
 Notation "'FV(' r ',' t ')' ⊣ k" := (FV k r t) (at level 40, t custom lc).
 
 Definition closed (k : Lvl.t) (e : Lambda.t) := forall (x : L.t), ~ (FV(x,e) ⊣ k).
-
-
-(* in progress *)
